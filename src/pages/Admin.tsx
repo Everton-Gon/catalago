@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { getUser, login, logout, onAuthChange, type User } from '@netlify/identity'
+import {
+  acceptInvite,
+  getUser,
+  handleAuthCallback,
+  login,
+  logout,
+  onAuthChange,
+  type User,
+} from '@netlify/identity'
 import {
   ArrowDown,
   ArrowUp,
@@ -129,9 +137,98 @@ function LoginScreen({ onAuthenticated }: { onAuthenticated: (user: User) => voi
   )
 }
 
+function CreatePasswordScreen({
+  token,
+  onAuthenticated,
+}: {
+  token: string
+  onAuthenticated: (user: User) => void
+}) {
+  const [password, setPassword] = useState('')
+  const [confirmation, setConfirmation] = useState('')
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    setError('')
+    if (password.length < 8) {
+      setError('A senha precisa ter pelo menos 8 caracteres.')
+      return
+    }
+    if (password !== confirmation) {
+      setError('As duas senhas precisam ser iguais.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      onAuthenticated(await acceptInvite(token, password))
+      window.history.replaceState(null, '', '/admin')
+    } catch {
+      setError('Não foi possível criar a senha. O convite pode ter expirado ou já ter sido usado.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <main className="grid min-h-screen place-items-center bg-gradient-to-br from-brand-950 via-brand-800 to-brand-700 px-4 py-10">
+      <section className="w-full max-w-md rounded-[1.75rem] bg-white p-7 shadow-2xl sm:p-9">
+        <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-brand-100 text-brand-700">
+          <LockKeyhole className="size-7" aria-hidden="true" />
+        </div>
+        <h1 className="mt-5 text-center font-display text-2xl font-extrabold text-ink-900">
+          Crie sua senha de administrador
+        </h1>
+        <p className="mt-2 text-center text-sm leading-relaxed text-ink-500">
+          Esta senha será usada junto com o e-mail que recebeu o convite.
+        </p>
+
+        <form className="mt-7 space-y-4" onSubmit={submit}>
+          <label className="block text-sm font-semibold text-ink-700">
+            Nova senha
+            <input
+              type="password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-ink-200 px-4 py-3 font-normal outline-none focus:border-brand-500"
+            />
+          </label>
+          <label className="block text-sm font-semibold text-ink-700">
+            Confirme a senha
+            <input
+              type="password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              value={confirmation}
+              onChange={(event) => setConfirmation(event.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-ink-200 px-4 py-3 font-normal outline-none focus:border-brand-500"
+            />
+          </label>
+          {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-700 px-5 py-3.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-brand-800 disabled:opacity-60"
+          >
+            {submitting ? <LoaderCircle className="size-4 animate-spin" /> : <LockKeyhole className="size-4" />}
+            Criar senha e entrar
+          </button>
+        </form>
+      </section>
+    </main>
+  )
+}
+
 export default function Admin() {
   const { products: fallbackProducts, refresh } = useCatalog()
   const [user, setUser] = useState<User | null>(null)
+  const [inviteToken, setInviteToken] = useState<string | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [products, setProducts] = useState<Product[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -159,11 +256,34 @@ export default function Admin() {
   }, [])
 
   useEffect(() => {
-    void getUser().then((current) => {
-      setUser(current)
-      setAuthLoading(false)
+    let active = true
+
+    async function initializeAuthentication() {
+      try {
+        const callback = await handleAuthCallback()
+        if (!active) return
+
+        if (callback?.type === 'invite' && callback.token) {
+          setInviteToken(callback.token)
+          setUser(null)
+        } else {
+          setUser(callback?.user ?? (await getUser()))
+        }
+      } catch {
+        if (active) setUser(await getUser())
+      } finally {
+        if (active) setAuthLoading(false)
+      }
+    }
+
+    void initializeAuthentication()
+    const unsubscribe = onAuthChange((_event, current) => {
+      if (active) setUser(current)
     })
-    return onAuthChange((_event, current) => setUser(current))
+    return () => {
+      active = false
+      unsubscribe()
+    }
   }, [])
 
   const isAdmin = Boolean(user?.roles?.includes('admin'))
@@ -384,6 +504,17 @@ export default function Admin() {
 
   if (authLoading) {
     return <div className="grid min-h-screen place-items-center"><LoaderCircle className="size-8 animate-spin text-brand-700" /></div>
+  }
+  if (inviteToken) {
+    return (
+      <CreatePasswordScreen
+        token={inviteToken}
+        onAuthenticated={(current) => {
+          setInviteToken(null)
+          setUser(current)
+        }}
+      />
+    )
   }
   if (!user) return <LoginScreen onAuthenticated={setUser} />
   if (!isAdmin) {
