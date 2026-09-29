@@ -6,6 +6,7 @@ import {
   login,
   logout,
   onAuthChange,
+  updateUser,
   type User,
 } from '@netlify/identity'
 import {
@@ -225,10 +226,94 @@ function CreatePasswordScreen({
   )
 }
 
+function ResetPasswordScreen({ onAuthenticated }: { onAuthenticated: (user: User) => void }) {
+  const [password, setPassword] = useState('')
+  const [confirmation, setConfirmation] = useState('')
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    setError('')
+    if (password.length < 8) {
+      setError('A senha precisa ter pelo menos 8 caracteres.')
+      return
+    }
+    if (password !== confirmation) {
+      setError('As duas senhas precisam ser iguais.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const current = await updateUser({ password })
+      onAuthenticated(current)
+      window.history.replaceState(null, '', '/admin')
+    } catch {
+      setError('Não foi possível alterar a senha. Solicite um novo link de recuperação.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <main className="grid min-h-screen place-items-center bg-gradient-to-br from-brand-950 via-brand-800 to-brand-700 px-4 py-10">
+      <section className="w-full max-w-md rounded-[1.75rem] bg-white p-7 shadow-2xl sm:p-9">
+        <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-brand-100 text-brand-700">
+          <LockKeyhole className="size-7" aria-hidden="true" />
+        </div>
+        <h1 className="mt-5 text-center font-display text-2xl font-extrabold text-ink-900">
+          Crie uma nova senha
+        </h1>
+        <p className="mt-2 text-center text-sm leading-relaxed text-ink-500">
+          Digite e confirme a nova senha da sua conta administrativa.
+        </p>
+
+        <form className="mt-7 space-y-4" onSubmit={submit}>
+          <label className="block text-sm font-semibold text-ink-700">
+            Nova senha
+            <input
+              type="password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-ink-200 px-4 py-3 font-normal outline-none focus:border-brand-500"
+            />
+          </label>
+          <label className="block text-sm font-semibold text-ink-700">
+            Confirme a nova senha
+            <input
+              type="password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              value={confirmation}
+              onChange={(event) => setConfirmation(event.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-ink-200 px-4 py-3 font-normal outline-none focus:border-brand-500"
+            />
+          </label>
+          {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-brand-700 px-5 py-3.5 text-sm font-bold uppercase tracking-wide text-white hover:bg-brand-800 disabled:opacity-60"
+          >
+            {submitting ? <LoaderCircle className="size-4 animate-spin" /> : <LockKeyhole className="size-4" />}
+            Salvar nova senha
+          </button>
+        </form>
+      </section>
+    </main>
+  )
+}
+
 export default function Admin() {
   const { products: fallbackProducts, refresh } = useCatalog()
   const [user, setUser] = useState<User | null>(null)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
+  const [passwordRecovery, setPasswordRecovery] = useState(false)
   const [authLoading, setAuthLoading] = useState(true)
   const [products, setProducts] = useState<Product[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -266,6 +351,9 @@ export default function Admin() {
         if (callback?.type === 'invite' && callback.token) {
           setInviteToken(callback.token)
           setUser(null)
+        } else if (callback?.type === 'recovery') {
+          setPasswordRecovery(true)
+          setUser(callback.user ?? (await getUser()))
         } else {
           setUser(callback?.user ?? (await getUser()))
         }
@@ -511,6 +599,16 @@ export default function Admin() {
         token={inviteToken}
         onAuthenticated={(current) => {
           setInviteToken(null)
+          setUser(current)
+        }}
+      />
+    )
+  }
+  if (passwordRecovery) {
+    return (
+      <ResetPasswordScreen
+        onAuthenticated={(current) => {
+          setPasswordRecovery(false)
           setUser(current)
         }}
       />
