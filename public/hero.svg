@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 560" width="720" height="560" role="img">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8b5cf6" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#fbbf24" stop-opacity="0.25"/>
+    </linearGradient>
+  </defs>
+  <circle cx="380" cy="270" r="250" fill="url(#g)"/>
+  <ellipse cx="380" cy="512" rx="290" ry="30" fill="#2e1065" opacity="0.18"/>
+
+  <!-- camiseta -->
+  <g transform="translate(55 190) scale(0.62)">
+    <path d="M232 118 300 152l68-34 122 62-44 96-56-24v196a16 16 0 0 1-16 16H226a16 16 0 0 1-16-16V252l-56 24-44-96Z" fill="#ffffff"/>
+    <path d="M258 128a44 44 0 0 0 84 0l-42 24Z" fill="#1c1917" opacity="0.12"/>
+    <g transform="translate(300 300) scale(2.1)">
+    <path d="M0 16c-12-10-22-17-22-27a11 11 0 0 1 22-5 11 11 0 0 1 22 5c0 10-10 17-22 27Z" fill="#6d28d9"/>
+    <rect x="-30" y="26" width="60" height="7" rx="3.5" fill="#f59e0b"/>
+    <rect x="-20" y="40" width="40" height="6" rx="3" fill="#6d28d9" opacity="0.45"/>
+  </g>
+  </g>
+
+  <!-- caneca -->
+  <g transform="translate(300 180) scale(0.66)">
+    <path d="M410 250h30a58 58 0 0 1 0 116h-30" fill="none" stroke="#fbbf24" stroke-width="28" stroke-linecap="round"/>
+    <rect x="170" y="200" width="245" height="290" rx="26" fill="#ffffff"/>
+    <ellipse cx="292" cy="205" rx="122" ry="26" fill="#fef3c7"/>
+    <g transform="translate(295 330) scale(1.7)">
+    <path d="M0 16c-12-10-22-17-22-27a11 11 0 0 1 22-5 11 11 0 0 1 22 5c0 10-10 17-22 27Z" fill="#6d28d9"/>
+    <rect x="-30" y="26" width="60" height="7" rx="3.5" fill="#f59e0b"/>
+    <rect x="-20" y="40" width="40" height="6" rx="3" fill="#6d28d9" opacity="0.45"/>
+  </g>
+  </g>
+
+  <!-- copo -->
+  <g transform="translate(470 130) scale(0.44)">
+    <rect x="330" y="96" width="20" height="120" rx="10" fill="#fbbf24"/>
+    <rect x="176" y="150" width="248" height="42" rx="18" fill="#5b21b6"/>
+    <path d="M188 192h224l-30 306a20 20 0 0 1-20 18H238a20 20 0 0 1-20-18Z" fill="#ffffff"/>
+    <g transform="translate(300 330) scale(1.8)">
+    <path d="M0 16c-12-10-22-17-22-27a11 11 0 0 1 22-5 11 11 0 0 1 22 5c0 10-10 17-22 27Z" fill="#6d28d9"/>
+    <rect x="-30" y="26" width="60" height="7" rx="3.5" fill="#f59e0b"/>
+    <rect x="-20" y="40" width="40" height="6" rx="3" fill="#6d28d9" opacity="0.45"/>
+  </g>
+  </g>
+
+  <circle cx="112" cy="92" r="20" fill="#fcd34d"/>
+  <circle cx="650" cy="420" r="15" fill="#c4b5fd"/>
+  <circle cx="620" cy="120" r="11" fill="#fbbf24"/>
+  <circle cx="62" cy="420" r="11" fill="#fbbf24"/>
+</svg>

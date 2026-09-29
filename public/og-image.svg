@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs><linearGradient id="og" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#2e1065"/><stop offset="1" stop-color="#6d28d9"/>
+  </linearGradient></defs>
+  <rect width="1200" height="630" fill="url(#og)"/>
+  <circle cx="1080" cy="90" r="160" fill="#fbbf24" opacity="0.18"/>
+  <circle cx="120" cy="560" r="130" fill="#8b5cf6" opacity="0.25"/>
+  <g transform="translate(70 195)">
+    <rect width="72" height="72" rx="18" fill="#7c3aed"/>
+    <path d="M22 18h26a10 10 0 0 1 0 20H31" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+    <path d="M22 18v40" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="52" cy="52" r="8" fill="#fbbf24"/>
+  </g>
+  <text x="70" y="330" font-family="Outfit, Segoe UI, sans-serif" font-size="76" font-weight="800" fill="#fff">Fé &amp; Propósito</text>
+  <text x="70" y="400" font-family="Inter, Segoe UI, sans-serif" font-size="34" fill="#ddd6fe">Produtos personalizados e sublimação</text>
+  <text x="70" y="480" font-family="Inter, Segoe UI, sans-serif" font-size="28" fill="#fcd34d">Monte sua sacola e peça o orçamento pelo WhatsApp</text>
+  <g transform="translate(760 150) scale(0.78)">
+    <path d="M410 250h30a58 58 0 0 1 0 116h-30" fill="none" stroke="#fbbf24" stroke-width="28" stroke-linecap="round"/>
+    <rect x="170" y="200" width="245" height="290" rx="26" fill="#fff"/>
+    <ellipse cx="292" cy="205" rx="122" ry="26" fill="#fef3c7"/>
+    <g transform="translate(295 330) scale(1.7)">
+    <path d="M0 16c-12-10-22-17-22-27a11 11 0 0 1 22-5 11 11 0 0 1 22 5c0 10-10 17-22 27Z" fill="#6d28d9"/>
+    <rect x="-30" y="26" width="60" height="7" rx="3.5" fill="#f59e0b"/>
+    <rect x="-20" y="40" width="40" height="6" rx="3" fill="#6d28d9" opacity="0.45"/>
+  </g>
+  </g>
+</svg>
