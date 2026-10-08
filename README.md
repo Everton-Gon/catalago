@@ -202,6 +202,10 @@ GEMINI_IMAGE_MODEL=gemini-3.1-flash-image
 O token do R2 precisa permitir leitura e gravação de objetos no bucket. As credenciais são
 usadas somente pela Function de upload e nunca são enviadas ao navegador.
 
+`R2_BUCKET_NAME` é o identificador do bucket, não uma credencial. O `netlify.toml` exclui
+somente essa variável da verificação de segredos, pois seu nome aparece nos exemplos.
+As chaves de acesso continuam sendo verificadas normalmente.
+
 `GEMINI_API_KEY` é opcional: sem ela, todo o catálogo e o painel continuam funcionando e
 somente o botão de geração de cores informa que falta configuração. Cada combinação de
 imagem original, cor, modelo e versão da instrução é armazenada em `ai-cache/` no R2; uma

@@ -3,6 +3,11 @@
   publish = "dist"
   functions = "netlify/functions"
 
+[build.environment]
+  # O nome do bucket é um identificador público, também usado nos exemplos.
+  # As credenciais R2 continuam protegidas pela verificação de segredos.
+  SECRETS_SCAN_OMIT_KEYS = "R2_BUCKET_NAME"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
