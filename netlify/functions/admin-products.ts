@@ -13,7 +13,11 @@ function isProductList(value: unknown): value is Array<Record<string, unknown>> 
         typeof product.id === 'string' &&
         typeof product.name === 'string' &&
         typeof product.slug === 'string' &&
-        Array.isArray(product.images),
+        Array.isArray(product.images) &&
+        (product.r2ObjectKey === undefined ||
+          (typeof product.r2ObjectKey === 'string' &&
+            (product.status === 'draft' ||
+              (typeof product.price === 'number' && Number.isFinite(product.price) && product.price > 0)))),
     )
   )
 }

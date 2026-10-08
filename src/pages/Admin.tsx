@@ -13,6 +13,7 @@ import {
   ArrowDown,
   ArrowUp,
   Copy,
+  CloudDownload,
   Eye,
   ImagePlus,
   LoaderCircle,
@@ -28,6 +29,7 @@ import { Link } from 'react-router-dom'
 import { useCatalog } from '@/contexts/CatalogContext'
 import { CATEGORIES } from '@/data/categories'
 import { formatPrice } from '@/utils/format'
+import { fetchR2Models, findUnpricedR2Product, importR2Models } from '@/utils/r2-import'
 import type { CategorySlug, Product } from '@/types'
 
 type Notice = { tone: 'success' | 'error' | 'info'; text: string }
@@ -321,6 +323,7 @@ export default function Admin() {
   const [loadingCatalog, setLoadingCatalog] = useState(false)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [discovering, setDiscovering] = useState(false)
   const [showGenerator, setShowGenerator] = useState(false)
   const [selectedColorIds, setSelectedColorIds] = useState<string[]>([])
   const [newColorName, setNewColorName] = useState('')
@@ -328,6 +331,11 @@ export default function Admin() {
   const [generating, setGenerating] = useState(false)
   const [notice, setNotice] = useState<Notice | null>(null)
   const initializedUser = useRef<string | null>(null)
+  const discoveryController = useRef<AbortController | null>(null)
+  const currentProducts = useRef(products)
+  currentProducts.current = products
+
+  useEffect(() => () => discoveryController.current?.abort(), [user?.id])
 
   useEffect(() => {
     document.title = 'Administração | Fé & Propósito'
@@ -562,6 +570,12 @@ export default function Admin() {
     const incomplete = published.find(
       (product) => !product.name.trim() || !product.slug.trim() || product.images.length === 0,
     )
+    const unpriced = findUnpricedR2Product(products)
+    if (unpriced) {
+      setSelectedId(unpriced.id)
+      setNotice({ tone: 'error', text: `Preencha um preço maior que zero para publicar “${unpriced.name}”.` })
+      return
+    }
     if (duplicateSlug) {
       setNotice({ tone: 'error', text: `O endereço “${duplicateSlug.slug}” está duplicado.` })
       return
@@ -587,6 +601,38 @@ export default function Admin() {
       setNotice({ tone: 'error', text: error instanceof Error ? error.message : 'Falha ao publicar.' })
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function discoverModels() {
+    const controller = new AbortController()
+    discoveryController.current = controller
+    setDiscovering(true)
+    setNotice({ tone: 'info', text: 'Buscando novos modelos no Cloudflare…' })
+    try {
+      const models = await fetchR2Models(controller.signal)
+      if (controller.signal.aborted) return
+      const result = importR2Models(currentProducts.current, models, new Date().toISOString().slice(0, 10))
+      setProducts(result.products)
+      if (result.additions.length) {
+        setSelectedId(result.additions[0].id)
+        setQuery('')
+        setNotice({
+          tone: 'success',
+          text: `${result.additions.length} novo(s) modelo(s) adicionado(s) como rascunho. Confira nome, categoria, descrição e preço. Clique em Publicar para salvar; somente produtos com status Publicado aparecem na loja.`,
+        })
+      } else {
+        setNotice({ tone: 'info', text: 'Nenhum modelo novo encontrado nas pastas de produtos do Cloudflare.' })
+      }
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        setNotice({ tone: 'error', text: error instanceof Error ? error.message : 'Não foi possível buscar os modelos.' })
+      }
+    } finally {
+      if (discoveryController.current === controller) {
+        discoveryController.current = null
+        setDiscovering(false)
+      }
     }
   }
 
@@ -639,7 +685,7 @@ export default function Admin() {
           <Link to="/" target="_blank" className="hidden items-center gap-2 rounded-full border border-ink-200 px-4 py-2 text-sm font-semibold text-ink-700 hover:bg-ink-50 sm:flex">
             <Eye className="size-4" /> Ver loja
           </Link>
-          <button onClick={() => void publishCatalog()} disabled={saving} className="flex items-center gap-2 rounded-full bg-brand-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-60">
+          <button onClick={() => void publishCatalog()} disabled={saving || discovering || loadingCatalog} className="flex items-center gap-2 rounded-full bg-brand-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-60">
             {saving ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
             Publicar
           </button>
@@ -658,6 +704,15 @@ export default function Admin() {
           <div className="border-b border-ink-200 p-4">
             <button onClick={addProduct} className="flex w-full items-center justify-center gap-2 rounded-xl bg-ink-900 px-4 py-3 text-sm font-bold text-white hover:bg-ink-800">
               <PackagePlus className="size-4" /> Novo produto
+            </button>
+            <button
+              type="button"
+              onClick={() => void discoverModels()}
+              disabled={discovering || saving || loadingCatalog}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm font-bold text-brand-800 hover:bg-brand-100 disabled:opacity-60"
+            >
+              {discovering ? <LoaderCircle className="size-4 animate-spin" /> : <CloudDownload className="size-4" />}
+              {discovering ? 'Buscando modelos…' : 'Buscar novos modelos'}
             </button>
             <label className="mt-3 flex items-center gap-2 rounded-xl border border-ink-200 px-3 py-2.5">
               <Search className="size-4 text-ink-400" />

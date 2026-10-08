@@ -74,6 +74,8 @@ export interface ProductColor {
 
 export interface Product {
   id: string
+  /** Chave original no R2, preservada para evitar importações duplicadas. */
+  r2ObjectKey?: string
   name: string
   slug: string
   /** Frase curta usada no card. */

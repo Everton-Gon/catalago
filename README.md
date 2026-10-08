@@ -212,6 +212,51 @@ O catálogo publicado pelo painel fica no Netlify Blobs. Na ausência da API (po
 ao executar apenas `npm run dev`), a loja usa automaticamente o catálogo estático do projeto.
 Para testar autenticação e Functions localmente, execute o projeto com `netlify dev`.
 
+### Buscar novos modelos no Cloudflare R2
+
+No `/admin`, clique em **Buscar novos modelos**. O projeto lista as imagens do bucket R2,
+percorre todas as páginas da listagem e acrescenta os modelos novos ao catálogo em edição
+como **rascunhos**. A busca exige uma conta com função `admin` e usa as mesmas variáveis
+`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` e
+`R2_PUBLIC_BASE_URL` configuradas nas Functions da Netlify. O token R2 precisa permitir
+listar/ler objetos do bucket. Nenhuma credencial é enviada ao navegador. Gemini não é usado.
+
+Organize as novas imagens em pastas de produtos:
+
+| Pasta | Categoria sugerida |
+| --- | --- |
+| `Camisa/`, `Camisas/`, `Camiseta/`, `Camisetas/` | Camisetas |
+| `Caneca normal/` | Canecas de porcelana |
+| `Caneca pintura/` | Canecas para colorir |
+| `Caneca magica/` | Canecas mágicas |
+| `Canecas/`, `Copos/`, `Kits/`, `Quadros/`, `Personalizados/` | Categoria correspondente |
+
+As pastas podem estar dentro de outro prefixo, como `catalago-imagens/`. Imagens em
+`catalogo-admin/<categoria>/` também são reconhecidas. A busca aceita JPG/JPEG, PNG, WebP,
+AVIF, GIF e SVG; ignora arquivos vazios, pastas sem categoria reconhecida e `ai-cache/`.
+Uma imagem corresponde a um modelo: use um arquivo por novo produto. O nome inicial vem
+do arquivo; a busca não interpreta a estampa nem agrupa fotos de um mesmo modelo.
+
+Produtos existentes são preservados. A chave do objeto e as imagens já utilizadas no
+catálogo (inclusive prévias de cores) evitam duplicatas em buscas futuras. Arquivos
+renomeados no R2 são novas chaves; revise para evitar cadastrar a mesma estampa duas vezes.
+
+Após importar, confira nome, categoria, descrição e preço. Os novos produtos começam sem
+variações de tamanho, tecido ou cor; a imagem do arquivo é o modelo oferecido. Os preços começam em
+zero para revisão e um produto importado precisa de preço maior que zero para ser publicado.
+O botão **Publicar** salva o catálogo inteiro, incluindo rascunhos; somente produtos com
+status **Publicado** ficam visíveis na loja. Se sair antes de salvar, a importação é perdida.
+A busca não envia, remove ou altera arquivos no R2 e não publica produtos automaticamente.
+O catálogo suporta até 5.000 produtos; a busca é limitada a 50.000 arquivos por execução e
+não aplica resultados parciais se uma página falhar ou um limite for excedido.
+
+Para executar os testes da importação com Node.js 24 (sem instalar ferramentas extras):
+
+```bash
+node --test tests/r2-import.test.mjs
+npm run build
+```
+
 ---
 
 ## O que ficou de fora de propósito
