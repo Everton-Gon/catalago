@@ -37,7 +37,7 @@ export default async function handler(request: Request) {
   const form = await request.formData()
   const file = form.get('file')
   const category = String(form.get('category') ?? 'produtos')
-  if (!(file instanceof File) || !file.type.startsWith('image/')) {
+  if (!(file instanceof File) || !['image/jpeg','image/png','image/webp','image/gif'].includes(file.type) || file.size === 0) {
     return Response.json({ error: 'Selecione uma imagem válida.' }, { status: 400 })
   }
   if (file.size > MAX_FILE_SIZE) {

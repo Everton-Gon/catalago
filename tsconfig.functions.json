@@ -5,6 +5,8 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
+    "baseUrl": ".",
+    "paths": { "@/*": ["src/*"] },
     "skipLibCheck": true,
     "noEmit": true,
     "types": ["node"]

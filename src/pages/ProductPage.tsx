@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
-import { Check, Info, ShoppingBag, Star, Truck } from 'lucide-react'
+import { Link, Navigate, useParams, useSearchParams, useNavigate } from 'react-router-dom'
+import { Check, Info, ShoppingBag, MessageCircle } from 'lucide-react'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import ProductGallery from '@/components/ProductGallery'
 import ProductOptions from '@/components/ProductOptions'
@@ -23,7 +23,6 @@ import {
 import { formatPrice } from '@/utils/format'
 import { buildProductQuoteMessage, buildWhatsAppUrl } from '@/utils/whatsapp'
 import { useSeo } from '@/utils/seo'
-import { PRODUCTION_TIME } from '@/config/site'
 import type { Personalization } from '@/types'
 
 export default function ProductPage() {
@@ -31,7 +30,11 @@ export default function ProductPage() {
   const { slug } = useParams<{ slug: string }>()
   const product = slug ? getProductBySlug(slug, products) : undefined
 
-  const { addItem, openDrawer } = useCart()
+  const { items, addItem, replaceItem, openDrawer } = useCart()
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const editingId = searchParams.get('editar')
+  const editingItem = items.find(item => item.id === editingId && item.product.id === product?.id)
   const { showToast } = useToast()
 
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({})
@@ -42,12 +45,12 @@ export default function ProductPage() {
   // Reinicia o formulário sempre que o produto muda (navegação entre relacionados).
   useEffect(() => {
     if (!product) return
-    setSelectedVariants(getDefaultSelections(product))
-    setQuantity(1)
-    setPersonalization({})
-    setNotes('')
+    setSelectedVariants(editingItem?.selectedVariants ?? getDefaultSelections(product))
+    setQuantity(editingItem?.quantity ?? 1)
+    setPersonalization(editingItem?.personalization ?? {})
+    setNotes(editingItem?.notes ?? '')
     track('view_product', { id: product.id, name: product.name })
-  }, [product])
+  }, [product, editingId])
 
   const unitPrice = useMemo(
     () => (product ? calculateUnitPrice(product, selectedVariants) : 0),
@@ -87,7 +90,7 @@ export default function ProductPage() {
     )
   const related = getRelatedProducts(product, 4, products)
   const total = unitPrice * quantity
-  const oldPrice = selectedPriceOption?.oldPrice
+  const oldPrice = selectedPriceOption?.oldPrice ?? product.oldPrice
   const hasDiscount = oldPrice !== undefined && oldPrice > unitPrice
 
 
@@ -97,9 +100,16 @@ export default function ProductPage() {
       return
     }
 
-    addItem({ product: product!, selectedVariants, quantity, personalization, notes })
-    showToast('Produto adicionado à sacola.', { label: 'Ver sacola', to: '/sacola' })
-    openDrawer()
+    const input = { product: product!, selectedVariants, quantity, personalization, notes }
+    if (editingItem) {
+      replaceItem(editingItem.id, input)
+      showToast('Alterações salvas na sacola.')
+      navigate('/sacola')
+    } else {
+      addItem(input)
+      showToast('Produto adicionado à sacola.', { label: 'Ver sacola', to: '/sacola' })
+      openDrawer()
+    }
   }
 
   return (
@@ -115,11 +125,11 @@ export default function ProductPage() {
       />
 
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-        <div className="lg:sticky lg:top-24 lg:self-start">
+        <div className="lg:sticky lg:top-44 lg:self-start">
           <ProductGallery
             images={product.images}
             productName={product.name}
-            imageFit={product.category === 'canecas' ? 'contain' : 'cover'}
+            imageFit="contain"
             previewImage={selectedColor?.previewImage}
             previewLabel={selectedColor?.previewImage ? `na cor ${selectedColor.name}` : undefined}
             badge={
@@ -145,14 +155,8 @@ export default function ProductPage() {
             {product.name}
           </h1>
 
-          <div className="mt-3 flex items-center gap-2">
-            <span className="flex" aria-hidden="true">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Star key={index} className="size-4 fill-accent-400 text-accent-400" />
-              ))}
-            </span>
-            <span className="text-sm text-ink-500">Aprovado por quem já personalizou</span>
-          </div>
+          {product.printName && <p className="mt-3 text-sm text-ink-500">{product.printName}</p>}
+          {editingItem && <p className="mt-3 rounded-xl border border-brand-200 bg-brand-50 p-3 text-sm text-brand-800">Editando um item da sacola. Salve abaixo para atualizar suas escolhas.</p>}
 
           <p className="mt-4 text-sm leading-relaxed text-ink-600 sm:text-base">
             {product.description}
@@ -231,7 +235,7 @@ export default function ProductPage() {
               className="flex w-full items-center justify-center gap-2.5 rounded-full bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50 px-6 py-4 text-sm font-bold uppercase tracking-wide text-white shadow-lg shadow-brand-700/20 transition-all hover:bg-brand-800 active:scale-[0.99]"
             >
               <ShoppingBag className="size-[18px]" aria-hidden="true" />
-              Adicionar à sacola
+              {editingItem ? 'Salvar alterações na sacola' : 'Adicionar à sacola'}
             </button>
 
             <a
@@ -241,12 +245,14 @@ export default function ProductPage() {
                   selectedVariants,
                   priceOnRequest ? undefined : unitPrice,
                   quantity,
+                  personalization,
+                  notes,
                 ),
               )}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => track('begin_whatsapp_quote', { source: 'product_page', id: product.id })}
-              className="flex w-full items-center justify-center gap-2.5 rounded-full border border-[#25D366] px-6 py-4 text-sm font-bold uppercase tracking-wide text-[#128C4A] transition-colors hover:bg-[#25D366]/10"
+              className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-[#17633c] px-6 py-4 text-center text-sm font-semibold text-[#17633c] transition-colors hover:bg-[#17633c]/5"
             >
               <WhatsAppIcon className="size-[18px]" />
               Solicitar orçamento pelo WhatsApp
@@ -259,11 +265,11 @@ export default function ProductPage() {
           <ul className="mt-6 space-y-2.5 text-sm text-ink-600">
             <li className="flex items-start gap-2.5">
               <Check className="mt-0.5 size-[18px] shrink-0 text-brand-600" aria-hidden="true" />
-              Prova digital enviada antes da produção
+              Escolha as opções e revise a personalização antes de enviar.
             </li>
             <li className="flex items-start gap-2.5">
-              <Truck className="mt-0.5 size-[18px] shrink-0 text-brand-600" aria-hidden="true" />
-              Pronto em {PRODUCTION_TIME} após a aprovação da arte. Frete combinado no WhatsApp.
+              <MessageCircle className="mt-0.5 size-[18px] shrink-0 text-brand-600" aria-hidden="true" />
+              Valor final, prazo e entrega são confirmados no atendimento pelo WhatsApp.
             </li>
           </ul>
         </div>

@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom'
-import { ShoppingBag } from 'lucide-react'
-import { useCart } from '@/contexts/CartContext'
-import { useToast } from '@/contexts/ToastContext'
-import { calculateStartingPrice, getDefaultSelections } from '@/utils/cart'
+import { ArrowRight } from 'lucide-react'
+import { calculateStartingPrice, getDefaultSelections, getSelectedPriceOption } from '@/utils/cart'
 import { formatPrice } from '@/utils/format'
 import type { Product } from '@/types'
 
@@ -12,30 +10,15 @@ interface ProductCardProps {
   eager?: boolean
 }
 
-/**
- * Card usado na home, no catálogo e nas categorias.
- *
- * O botão de adicionar rápido usa a primeira opção de cada variação como
- * padrão — quem quiser escolher cor, tamanho ou personalizar abre o produto.
- * Na sacola cada item tem um link "Editar" que volta para a página do produto.
- */
+/** Shared card: product choices are confirmed on the product page. */
 export default function ProductCard({ product, eager = false }: ProductCardProps) {
-  const { addItem, openDrawer } = useCart()
-  const { showToast } = useToast()
-
   const startingPrice = calculateStartingPrice(product)
-  const hasDiscount = product.oldPrice !== undefined && product.oldPrice > product.price
-
-  function quickAdd() {
-    const defaults = getDefaultSelections(product, true)
-    addItem({ product, selectedVariants: defaults, quantity: 1 })
-    showToast('Produto adicionado à sacola.', { label: 'Ver sacola', to: '/sacola' })
-    openDrawer()
-  }
+  const oldPrice = getSelectedPriceOption(product, getDefaultSelections(product, true))?.oldPrice ?? product.oldPrice
+  const hasDiscount = oldPrice !== undefined && oldPrice > startingPrice
 
   return (
-    <article className="group relative flex h-full flex-col overflow-hidden rounded-card border border-ink-200 bg-white shadow-soft transition-all duration-300 hover:-translate-y-1 hover:border-brand-200 hover:shadow-lift">
-      <div className="relative aspect-square overflow-hidden bg-ink-100">
+    <article className="product-card group relative flex h-full flex-col overflow-hidden rounded-card border border-ink-200 bg-white shadow-soft transition-all duration-300 hover:-translate-y-1 hover:border-brand-200 hover:shadow-lift">
+      <div className="product-image relative aspect-square overflow-hidden bg-ink-100">
         <img
           src={product.images[0]}
           alt={product.name}
@@ -43,7 +26,7 @@ export default function ProductCard({ product, eager = false }: ProductCardProps
           decoding="async"
           width={600}
           height={600}
-          className={`size-full transition-transform duration-500 group-hover:scale-105 ${product.category === 'canecas' ? 'object-contain p-1' : 'object-cover'}`}
+          className="size-full object-contain p-3 transition-transform duration-500 group-hover:scale-[1.02]"
         />
         {(product.badge ||
           (hasDiscount && product.promotionPresentation !== 'stacked-no-badge')) && (
@@ -63,11 +46,13 @@ export default function ProductCard({ product, eager = false }: ProductCardProps
           </Link>
         </h3>
 
+        {product.printName && <p className="mt-1 text-xs text-ink-500">{product.printName}</p>}
+
         <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-ink-500">
           {product.shortDescription}
         </p>
 
-        <div className="mt-4 flex items-end justify-between gap-3">
+        <div className="mb-4 mt-4 flex items-end justify-between gap-3">
           <p className="min-w-0">
             <span className="block text-[11px] font-medium uppercase tracking-wide text-ink-400">
               A partir de
@@ -75,41 +60,34 @@ export default function ProductCard({ product, eager = false }: ProductCardProps
             {hasDiscount && product.promotionPresentation === 'stacked-no-badge' ? (
               <span className="block">
                 <span className="block text-xs text-ink-400 line-through">
-                  {formatPrice(product.oldPrice!)}
+                  {formatPrice(oldPrice!)}
                 </span>
-                <span className="block font-display text-xl font-extrabold text-brand-800">
+                <span className="product-price block font-display text-xl font-extrabold text-brand-800">
                   {formatPrice(startingPrice)}
                 </span>
               </span>
             ) : (
               <span className="flex flex-wrap items-baseline gap-x-2">
-                <span className="font-display text-xl font-extrabold text-brand-800">
+                <span className="product-price font-display text-xl font-extrabold text-brand-800">
                   {formatPrice(startingPrice)}
                 </span>
                 {hasDiscount && (
                   <span className="text-xs text-ink-400 line-through">
-                    {formatPrice(product.oldPrice!)}
+                    {formatPrice(oldPrice!)}
                   </span>
                 )}
               </span>
             )}
           </p>
 
-          <button
-            type="button"
-            onClick={quickAdd}
-            className="relative z-10 grid size-11 shrink-0 place-items-center rounded-full bg-brand-700 text-white transition-colors hover:bg-brand-800 active:scale-95"
-            aria-label={`Adicionar ${product.name} à sacola`}
-          >
-            <ShoppingBag className="size-[18px]" aria-hidden="true" />
-          </button>
         </div>
 
         <Link
           to={`/produto/${product.slug}`}
-          className="relative z-10 mt-4 block rounded-full border border-ink-200 py-2.5 text-center text-sm font-semibold text-ink-700 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800"
+          className="product-action relative z-10 mt-auto flex items-center justify-center gap-2 rounded-full border border-ink-200 py-2.5 text-center text-sm font-semibold text-ink-700 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800"
         >
-          Ver produto
+          {product.variants.length ? 'Ver opções' : product.personalization.enabled ? 'Personalizar' : 'Ver produto'}
+          <ArrowRight className="size-3.5" aria-hidden="true" />
         </Link>
       </div>
     </article>

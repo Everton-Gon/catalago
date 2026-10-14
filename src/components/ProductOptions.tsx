@@ -94,7 +94,7 @@ export default function ProductOptions({
                         aria-label={color.name}
                         aria-pressed={isSelected}
                         title={color.name}
-                        className={`relative grid size-9 shrink-0 place-items-center rounded-lg border-2 shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-2 ${
+                        className={`relative grid size-11 shrink-0 place-items-center rounded-lg border-2 shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-2 ${
                           isSelected
                             ? 'border-brand-600 ring-2 ring-brand-200'
                             : color.id === 'branco'

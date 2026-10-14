@@ -20,7 +20,7 @@ export default function QuantitySelector({
   min = 1,
 }: QuantitySelectorProps) {
   const fieldId = useId()
-  const buttonSize = size === 'sm' ? 'size-8' : 'size-11'
+  const buttonSize = 'size-11'
   const iconSize = size === 'sm' ? 'size-3.5' : 'size-4'
   const fieldWidth = size === 'sm' ? 'w-9' : 'w-12'
 

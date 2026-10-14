@@ -18,7 +18,7 @@ export default function WhatsAppCheckout({
   notes = '',
   source,
   className = '',
-  children = 'Solicitar orçamento pelo WhatsApp',
+  children = 'Enviar pedido pelo WhatsApp',
 }: WhatsAppCheckoutProps) {
   if (items.length === 0) return null
 
@@ -35,7 +35,7 @@ export default function WhatsAppCheckout({
             total: items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0),
           })
         }}
-        className="flex w-full items-center justify-center gap-2.5 rounded-full bg-[#25D366] px-5 py-4 text-center text-sm font-bold uppercase tracking-wide text-white shadow-lg shadow-[#25D366]/25 transition-all hover:brightness-105 active:scale-[0.99]"
+        className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-[#17633c] px-5 py-4 text-center text-sm font-semibold text-white shadow-soft transition-all hover:bg-[#124e30] active:scale-[0.99]"
       >
         <WhatsAppIcon className="size-5 shrink-0" />
         {children}

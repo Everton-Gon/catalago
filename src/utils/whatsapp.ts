@@ -1,6 +1,6 @@
 import { WHATSAPP_DEFAULT_MESSAGE, WHATSAPP_NUMBER } from '@/config/site'
 import { formatPrice } from './format'
-import type { CartItem, Product } from '@/types'
+import type { CartItem, Personalization, Product } from '@/types'
 
 /** Monta o link wa.me com a mensagem já codificada. */
 export function buildWhatsAppUrl(message: string): string {
@@ -18,6 +18,8 @@ export function buildProductQuoteMessage(
   selectedVariants: Record<string, string> = {},
   unitPrice?: number,
   quantity = 1,
+  personalization: Personalization = {},
+  notes = '',
 ): string {
   const variants = product.variants.flatMap((variant) => {
     const chosen = selectedVariants[variant.id]
@@ -31,6 +33,9 @@ export function buildProductQuoteMessage(
     ...(product.printName ? [`*Estampa:* ${product.printName}`] : []),
     ...variants,
     `*Quantidade:* ${quantity}`,
+    ...(personalization.name ? [`Personalização (nome): ${personalization.name}`] : []),
+    ...(personalization.text ? [`Personalização (texto): ${personalization.text}`] : []),
+    ...(notes.trim() ? [`Observações: ${notes.trim()}`] : []),
     `*Valor estimado:* ${
       unitPrice === undefined ? 'Sob consulta' : formatPrice(unitPrice * quantity)
     }`,

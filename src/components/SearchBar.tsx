@@ -77,8 +77,7 @@ export default function SearchBar({
         <label htmlFor={`${listId}-input`} className="sr-only">
           Buscar produtos
         </label>
-        <div className="flex items-center gap-2 rounded-full border border-ink-200 bg-white px-4 py-2.5 shadow-sm transition-colors focus-within:border-brand-500">
-          <Search className="size-[18px] shrink-0 text-ink-400" aria-hidden="true" />
+        <div className="search-field flex min-h-12 items-center gap-1 rounded-lg border border-ink-200 bg-white px-2 shadow-sm transition-colors focus-within:border-brand-500">
           <input
             id={`${listId}-input`}
             type="search"
@@ -90,10 +89,10 @@ export default function SearchBar({
               setOpen(true)
             }}
             onFocus={() => setOpen(true)}
-            className="w-full min-w-0 bg-transparent text-sm text-ink-800 outline-none placeholder:text-ink-400 [&::-webkit-search-cancel-button]:hidden"
+            onKeyDown={(event) => { if (event.key === 'Escape') setOpen(false) }}
+            className="w-full min-w-0 bg-transparent px-2 py-3 text-sm text-ink-800 outline-none placeholder:text-ink-400 [&::-webkit-search-cancel-button]:hidden"
             aria-autocomplete="list"
             aria-controls={listId}
-            aria-expanded={isOpen && suggestions.length > 0}
           />
           {query && (
             <button
@@ -102,24 +101,24 @@ export default function SearchBar({
                 setQuery('')
                 onSearch?.('')
               }}
-              className="shrink-0 rounded-full p-0.5 text-ink-400 transition-colors hover:text-ink-700"
+              className="grid size-11 shrink-0 place-items-center rounded-full text-ink-500 transition-colors hover:text-ink-700"
               aria-label="Limpar busca"
             >
               <X className="size-4" aria-hidden="true" />
             </button>
           )}
+          <button type="submit" aria-label="Pesquisar produtos" className="grid size-11 shrink-0 place-items-center rounded-lg text-brand-700 transition-colors hover:bg-brand-50"><Search className="size-[18px]" aria-hidden="true" /></button>
         </div>
       </form>
 
       {isOpen && suggestions.length > 0 && (
         <ul
           id={listId}
-          role="listbox"
           aria-label="Sugestões de produtos"
           className="absolute inset-x-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-ink-200 bg-white py-1 shadow-lift"
         >
           {suggestions.map((product) => (
-            <li key={product.id} role="option" aria-selected="false">
+            <li key={product.id}>
               <button
                 type="button"
                 onClick={() => pick(product)}
@@ -129,7 +128,7 @@ export default function SearchBar({
                   src={product.images[0]}
                   alt=""
                   loading="lazy"
-                  className="size-10 shrink-0 rounded-lg bg-ink-100 object-cover"
+                  className="size-10 shrink-0 rounded-lg bg-ink-100 object-contain"
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-ink-800">

@@ -1,5 +1,6 @@
 import { PRODUCTS } from './products'
 import type { CatalogFilters, Product, SortOption } from '@/types'
+import { calculateStartingPrice, calculateUnitPrice, getDefaultSelections } from '@/utils/cart'
 
 /**
  * Camada de acesso ao catálogo.
@@ -52,10 +53,26 @@ export function getRelatedProducts(
   return [...sameCategory, ...others].slice(0, limit)
 }
 
-/** Maior preço-base do catálogo — usado para o range do filtro de preço. */
+/** Current sale prices only; crossed-out prices never set the filter limits. */
+export function getPriceBounds(source: Product[] = PRODUCTS): { min: number; max: number } {
+  const prices = getAllProducts(source).flatMap(product => {
+    const defaults = getDefaultSelections(product, true)
+    return [calculateStartingPrice(product), ...product.variants.flatMap(variant =>
+      variant.options.flatMap(option => option.price === undefined || option.priceOnRequest
+        ? []
+        : [calculateUnitPrice(product, { ...defaults, [variant.id]: option.label })]),
+    )]
+  }).filter(price => Number.isFinite(price) && price >= 0)
+  return prices.length ? { min: Math.min(...prices), max: Math.max(...prices) } : { min: 0, max: 0 }
+}
+
 export function getMaxPrice(source: Product[] = PRODUCTS): number {
-  const prices = getAllProducts(source).map((product) => product.price)
-  return prices.length ? Math.ceil(Math.max(...prices) / 10) * 10 : 0
+  return getPriceBounds(source).max
+}
+
+function filterPrice(product: Product, filters: CatalogFilters): number {
+  const fabric = product.variants.find(variant => variant.id === 'tecido')?.options.find(option => option.value === filters.shirtFabric)
+  return fabric ? calculateUnitPrice(product, { ...getDefaultSelections(product, true), tecido: fabric.label }) : calculateStartingPrice(product)
 }
 
 function normalize(value: string): string {
@@ -91,8 +108,8 @@ export function searchProducts(products: Product[], query: string): Product[] {
 
 const SORTERS: Record<SortOption, (a: Product, b: Product) => number> = {
   recentes: (a, b) => b.createdAt.localeCompare(a.createdAt),
-  'menor-preco': (a, b) => a.price - b.price,
-  'maior-preco': (a, b) => b.price - a.price,
+  'menor-preco': (a, b) => calculateStartingPrice(a) - calculateStartingPrice(b),
+  'maior-preco': (a, b) => calculateStartingPrice(b) - calculateStartingPrice(a),
   'mais-vendidos': (a, b) => b.salesRank - a.salesRank,
   nome: (a, b) => a.name.localeCompare(b.name, 'pt-BR'),
 }
@@ -102,7 +119,7 @@ export const SORT_LABELS: Record<SortOption, string> = {
   'menor-preco': 'Menor preço',
   'maior-preco': 'Maior preço',
   'mais-vendidos': 'Mais vendidos',
-  nome: 'Nome A-Z',
+  nome: 'Nome de A a Z',
 }
 
 /** Aplica busca + filtros + ordenação. Usado pelo catálogo e pelas categorias. */
@@ -112,8 +129,8 @@ export function filterProducts(
 ): Product[] {
   let result = getAllProducts(source)
 
-  if (filters.category !== 'todas') {
-    result = result.filter((p) => p.category === filters.category)
+  if (filters.categories.length > 0) {
+    result = result.filter((p) => filters.categories.includes(p.category))
   }
   if (filters.shirtFabric !== 'todos') {
     result = result.filter((product) =>
@@ -129,20 +146,23 @@ export function filterProducts(
       (product) => product.category === 'canecas' && product.mugType === filters.mugType,
     )
   }
-  if (filters.maxPrice !== null) {
+  if (filters.shirtModel && filters.shirtModel !== 'todos') {
+    result = result.filter(product => product.category === 'camisetas' && product.variants.some(variant => variant.id === 'modelo' && variant.options.some(option => (option.value ?? option.label) === filters.shirtModel)))
+  }
+  if (filters.minPrice !== null || filters.maxPrice !== null) {
     result = result.filter((product) => {
-      if (product.category === 'camisetas' && filters.shirtFabric !== 'todos') {
-        const fabricOption = product.variants
-          .find((variant) => variant.id === 'tecido')
-          ?.options.find((option) => option.value === filters.shirtFabric)
-        return fabricOption?.price !== undefined && fabricOption.price <= filters.maxPrice!
-      }
-      return product.price <= filters.maxPrice!
+      const price = filterPrice(product, filters)
+      return (filters.minPrice === null || price >= filters.minPrice) &&
+        (filters.maxPrice === null || price <= filters.maxPrice)
     })
   }
   result = searchProducts(result, filters.query)
 
-  return [...result].sort(SORTERS[filters.sort])
+  return [...result].sort(filters.sort === 'menor-preco'
+    ? (a, b) => filterPrice(a, filters) - filterPrice(b, filters)
+    : filters.sort === 'maior-preco'
+      ? (a, b) => filterPrice(b, filters) - filterPrice(a, filters)
+      : SORTERS[filters.sort])
 }
 
 /** Sugestões rápidas para o autocomplete da barra de busca. */

@@ -5,6 +5,7 @@ import Home from '@/pages/Home'
 import { CartProvider } from '@/contexts/CartContext'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { CatalogProvider } from '@/contexts/CatalogContext'
+import { StorefrontProvider } from '@/contexts/StorefrontContext'
 
 /**
  * A Home entra no bundle principal; as demais páginas são carregadas sob
@@ -33,6 +34,7 @@ export default function App() {
   return (
     <ToastProvider>
       <CatalogProvider>
+        <StorefrontProvider>
         <CartProvider>
           <Suspense fallback={<PageFallback />}>
             <Routes>
@@ -41,6 +43,7 @@ export default function App() {
               <Route index element={<Home />} />
               <Route path="produtos" element={<Catalog />} />
               <Route path="categoria/:slug" element={<Catalog />} />
+              <Route path="colecao/:collectionSlug" element={<Catalog />} />
               <Route path="produto/:slug" element={<ProductPage />} />
               <Route path="sacola" element={<CartPage />} />
               <Route path="como-funciona" element={<HowItWorks />} />
@@ -52,6 +55,7 @@ export default function App() {
             </Routes>
           </Suspense>
         </CartProvider>
+        </StorefrontProvider>
       </CatalogProvider>
     </ToastProvider>
   )

@@ -8,7 +8,7 @@ import ScrollToTop from '@/components/ScrollToTop'
 
 export default function MainLayout() {
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="storefront flex min-h-dvh flex-col">
       <ScrollToTop />
       <Header />
 

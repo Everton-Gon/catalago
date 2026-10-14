@@ -34,7 +34,7 @@ export default function CartItemRow({ item, variant = 'full', onNavigate }: Cart
           src={item.product.images[0]}
           alt={item.product.name}
           loading="lazy"
-          className="size-full object-cover"
+          className="size-full object-contain p-1"
         />
       </Link>
 
@@ -53,7 +53,7 @@ export default function CartItemRow({ item, variant = 'full', onNavigate }: Cart
           <button
             type="button"
             onClick={() => removeItem(item.id)}
-            className="shrink-0 rounded-full p-1.5 text-ink-400 transition-colors hover:bg-red-50 hover:text-red-600"
+            className="grid size-11 shrink-0 place-items-center rounded-full text-ink-500 transition-colors hover:bg-red-50 hover:text-red-600"
             aria-label={`Remover ${item.product.name} da sacola`}
           >
             <Trash2 className="size-4" aria-hidden="true" />
@@ -71,16 +71,16 @@ export default function CartItemRow({ item, variant = 'full', onNavigate }: Cart
         {(item.personalization.name || item.personalization.text) && (
           <p className="mt-1 text-xs text-ink-500 sm:text-sm">
             {item.personalization.name && (
-              <span className="block truncate">Nome: {item.personalization.name}</span>
+              <span className="block break-words">Nome: {item.personalization.name}</span>
             )}
             {item.personalization.text && (
-              <span className="block truncate">Texto: “{item.personalization.text}”</span>
+              <span className="block break-words">Texto: “{item.personalization.text}”</span>
             )}
           </p>
         )}
 
         {item.notes && (
-          <p className="mt-1 truncate text-xs italic text-ink-500">Obs.: {item.notes}</p>
+          <p className="mt-1 break-words text-xs italic text-ink-500">Obs.: {item.notes}</p>
         )}
 
         <div className="mt-auto flex flex-wrap items-end justify-between gap-2 pt-3">
@@ -101,8 +101,8 @@ export default function CartItemRow({ item, variant = 'full', onNavigate }: Cart
 
         {!isCompact && (
           <Link
-            to={`/produto/${item.product.slug}`}
-            className="mt-3 inline-flex items-center gap-1.5 self-start text-xs font-semibold text-brand-700 transition-colors hover:text-brand-900"
+            to={`/produto/${item.product.slug}?editar=${encodeURIComponent(item.id)}`}
+            className="mt-3 inline-flex min-h-11 items-center gap-1.5 self-start text-xs font-semibold text-brand-700 transition-colors hover:text-brand-900"
           >
             <Pencil className="size-3.5" aria-hidden="true" />
             Editar opções ou personalização

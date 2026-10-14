@@ -8,7 +8,7 @@ export async function requireAdmin(request: Request): Promise<Response | null> {
   }
 
   if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
-    verifyRequestOrigin(request)
+    try { verifyRequestOrigin(request) } catch { return Response.json({error:'Origem da solicitação não autorizada.'},{status:403}) }
   }
   return null
 }

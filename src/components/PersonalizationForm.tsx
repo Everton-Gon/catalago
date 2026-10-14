@@ -29,6 +29,7 @@ export default function PersonalizationForm({
       <p className="mt-1 text-sm text-ink-600">
         Conte como você quer o seu produto. Tudo isso vai junto no orçamento.
       </p>
+      <p className="mt-2 text-xs leading-relaxed text-ink-600">Quer usar uma foto ou uma arte? Envie o arquivo diretamente na conversa do WhatsApp após abrir seu pedido. Esta página não envia arquivos ao atendimento.</p>
 
       <div className="mt-4 space-y-4">
         {config.nameField && (

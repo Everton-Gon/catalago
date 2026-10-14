@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useDialogFocus } from '@/utils/useDialogFocus'
 import { Link, NavLink } from 'react-router-dom'
 import { MessageCircle, X } from 'lucide-react'
 import Logo from './Logo'
@@ -12,22 +12,7 @@ interface MobileMenuProps {
 }
 
 export default function MobileMenu({ open, onClose }: MobileMenuProps) {
-  // Trava o scroll do fundo enquanto o painel está aberto.
-  useEffect(() => {
-    if (!open) return
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKeyDown)
-
-    return () => {
-      document.body.style.overflow = previous
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [open, onClose])
+  const dialogRef = useDialogFocus(open, onClose)
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `block rounded-xl px-4 py-3 text-base font-medium transition-colors ${
@@ -47,6 +32,8 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
       />
 
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label="Menu de navegação"
@@ -107,7 +94,7 @@ export default function MobileMenu({ open, onClose }: MobileMenuProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={onClose}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#25D366] px-5 py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#17633c] px-5 py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
           >
             <MessageCircle className="size-[18px]" aria-hidden="true" />
             Falar pelo WhatsApp

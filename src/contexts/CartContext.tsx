@@ -54,6 +54,7 @@ interface CartContextValue {
   closeDrawer: () => void
   /** Retorna o id do item criado/atualizado. */
   addItem: (input: AddToCartInput) => string
+  replaceItem: (id: string, input: AddToCartInput) => void
   removeItem: (id: string) => void
   updateQuantity: (id: string, quantity: number) => void
   clearCart: () => void
@@ -196,6 +197,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const replaceItem = useCallback((originalId: string, { product, selectedVariants, quantity, personalization = {}, notes = '' }: AddToCartInput) => {
+    const id = buildCartItemId(product, selectedVariants, personalization, notes)
+    const replacement: CartItem = { id, product, selectedVariants, quantity: Math.min(MAX_QUANTITY, Math.max(1, Math.trunc(quantity))), personalization, notes, unitPrice: calculateUnitPrice(product, selectedVariants) }
+    setItems(current => {
+      if (!current.some(item => item.id === originalId)) return current
+      const remaining = current.filter(item => item.id !== originalId)
+      const matching = remaining.find(item => item.id === id)
+      return matching
+        ? remaining.map(item => item.id === id ? { ...replacement, quantity: Math.min(MAX_QUANTITY, item.quantity + replacement.quantity) } : item)
+        : current.map(item => item.id === originalId ? replacement : item)
+    })
+  }, [])
+
   const removeItem = useCallback((id: string) => {
     setItems((current) => current.filter((item) => item.id !== id))
     track('remove_from_cart', { id })
@@ -233,11 +247,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       openDrawer,
       closeDrawer,
       addItem,
+      replaceItem,
       removeItem,
       updateQuantity,
       clearCart,
     }),
-    [items, isDrawerOpen, openDrawer, closeDrawer, addItem, removeItem, updateQuantity, clearCart],
+    [items, isDrawerOpen, openDrawer, closeDrawer, addItem, replaceItem, removeItem, updateQuantity, clearCart],
   )
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>

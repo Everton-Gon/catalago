@@ -82,6 +82,8 @@ export interface Product {
   shortDescription: string
   description: string
   category: CategorySlug
+  /** Stable collection IDs, independent of the product category. */
+  collections?: string[]
   /** Referência neutra da estampa quando o arquivo não informa um tema. */
   printName?: string
   /** Tipo comercial da caneca, usado pelo filtro da categoria. */
@@ -139,9 +141,11 @@ export type SortOption =
 
 export interface CatalogFilters {
   query: string
-  category: CategorySlug | 'todas'
+  categories: CategorySlug[]
   shirtFabric: ShirtFabric | 'todos'
+  shirtModel?: string
   mugType: MugType | 'todos'
+  minPrice: number | null
   maxPrice: number | null
   sort: SortOption
 }

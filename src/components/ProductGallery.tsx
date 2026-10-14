@@ -15,7 +15,7 @@ export default function ProductGallery({
   badge,
   previewImage,
   previewLabel,
-  imageFit = 'cover',
+  imageFit = 'contain',
 }: ProductGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0)
 

@@ -1,3 +1,4 @@
+import { useDialogFocus } from '@/utils/useDialogFocus'
 import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { X } from 'lucide-react'
@@ -17,21 +18,7 @@ export default function CartDrawer() {
     closeDrawer()
   }, [location.pathname, closeDrawer])
 
-  useEffect(() => {
-    if (!isDrawerOpen) return
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') closeDrawer()
-    }
-    document.addEventListener('keydown', onKeyDown)
-
-    return () => {
-      document.body.style.overflow = previous
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [isDrawerOpen, closeDrawer])
+  const dialogRef = useDialogFocus(isDrawerOpen, closeDrawer)
 
   return (
     // `inert` (React 19) tira o painel fechado do tab order e da árvore de
@@ -48,6 +35,8 @@ export default function CartDrawer() {
       />
 
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label="Minha sacola"
