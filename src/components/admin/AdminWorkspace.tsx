@@ -315,7 +315,9 @@ export default function AdminWorkspace({
       } else
         setNotice({
           tone: "info",
-          text: "Nenhum novo modelo foi encontrado no R2.",
+          text: models.length
+            ? `${models.length} imagem(ns) reconhecida(s) já estão no catálogo, incluindo rascunhos. Arquivos em pastas não reconhecidas não são importados.`
+            : "Nenhuma imagem foi reconhecida nas pastas de produtos do R2. Confira os nomes das pastas, os formatos das imagens e o bucket configurado.",
         });
     } catch (error) {
       report(error);

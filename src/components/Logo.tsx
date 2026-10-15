@@ -13,34 +13,16 @@ export default function Logo({ compact = false, className = '', onClick }: LogoP
     <Link
       to="/"
       onClick={onClick}
-      className={`group inline-flex items-center gap-2.5 ${className}`}
+      className={`brand-logo${compact ? ' is-compact' : ''} ${className}`}
       aria-label={`${SITE.name} — página inicial`}
     >
-      <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-white shadow-sm transition-transform duration-300 group-hover:scale-105 sm:size-12">
-        <img
-          src="/brand/fe-proposito-logo.png"
-          alt=""
-          width={48}
-          height={48}
-          className="size-full object-contain"
-          aria-hidden="true"
-        />
-      </span>
-      <span className="flex flex-col leading-none">
-        <span className="font-display text-lg font-extrabold tracking-tight text-ink-900 sm:text-xl">
-          {SITE.name.split('&').map((part, index) => (
-            <span key={index}>
-              {index > 0 && <span className="text-brand-700">&amp;</span>}
-              {part}
-            </span>
-          ))}
-        </span>
-        {!compact && (
-          <span className="mt-0.5 hidden text-[10px] font-medium uppercase tracking-[0.18em] text-ink-500 sm:block">
-            Personalizados
-          </span>
-        )}
-      </span>
+      {/* Viewports display the supplied artwork unchanged and exclude screenshot UI. */}
+      <svg className="brand-logo-full" viewBox="160 65 865 715" width="178" height="147" role="img" aria-label="Fé & Propósito — Produtos que inspiram, fé que transforma">
+        <image href="/brand/fe-proposito-assinatura.webp" width="1202" height="858" />
+      </svg>
+      <svg className="brand-logo-symbol" viewBox="405 65 410 480" width="42" height="49" aria-hidden="true">
+        <image href="/brand/fe-proposito-assinatura.webp" width="1202" height="858" />
+      </svg>
     </Link>
   )
 }

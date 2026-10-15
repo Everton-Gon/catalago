@@ -75,6 +75,10 @@
 .admin-brand {
   margin: 0 8px 32px;
 }
+.admin-brand .brand-logo { width:166px; }
+.collapsed .admin-sidebar .admin-brand .brand-logo { width:42px; }
+.collapsed .admin-sidebar .brand-logo-full { display:none; }
+.collapsed .admin-sidebar .brand-logo-symbol { display:block; width:42px; height:49px; }
 .admin-brand small {
   display: block;
   margin-top: 10px;

@@ -12,9 +12,31 @@ const FOLDERS: Record<string, { category: CategorySlug; label: string; mugType?:
   'caneca pintura': { category: 'canecas', label: 'Caneca para colorir', mugType: 'colorir' },
   'caneca magica': { category: 'canecas', label: 'Caneca mágica', mugType: 'magica' },
   canecas: { category: 'canecas', label: 'Caneca' },
+  copo: { category: 'copos', label: 'Copo' },
   copos: { category: 'copos', label: 'Copo' },
+  garrafa: { category: 'copos', label: 'Garrafa' },
+  garrafas: { category: 'copos', label: 'Garrafa' },
+  'copo e garrafa': { category: 'copos', label: 'Copo ou garrafa' },
+  'copos e garrafas': { category: 'copos', label: 'Copo ou garrafa' },
+  'copos garrafas': { category: 'copos', label: 'Copo ou garrafa' },
+  'garrafa termica': { category: 'copos', label: 'Garrafa térmica' },
+  'garrafas termicas': { category: 'copos', label: 'Garrafa térmica' },
+  squeeze: { category: 'copos', label: 'Squeeze' },
+  squeezes: { category: 'copos', label: 'Squeeze' },
+  kit: { category: 'kits', label: 'Kit' },
   kits: { category: 'kits', label: 'Kit' },
+  'kit presente': { category: 'kits', label: 'Kit' },
+  'kits presente': { category: 'kits', label: 'Kit' },
+  'kit presentes': { category: 'kits', label: 'Kit' },
+  'kits presentes': { category: 'kits', label: 'Kit' },
+  quadro: { category: 'quadros', label: 'Quadro' },
   quadros: { category: 'quadros', label: 'Quadro' },
+  azulejo: { category: 'quadros', label: 'Azulejo' },
+  azulejos: { category: 'quadros', label: 'Azulejo' },
+  azuleijo: { category: 'quadros', label: 'Azulejo' },
+  azuleijos: { category: 'quadros', label: 'Azulejo' },
+  almofada: { category: 'personalizados', label: 'Almofada' },
+  almofadas: { category: 'personalizados', label: 'Almofada' },
   personalizados: { category: 'personalizados', label: 'Personalizado' },
 }
 
@@ -22,12 +44,16 @@ function normalize(value: string): string {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
 }
 
+function normalizeFolder(value: string): string {
+  return normalize(value).replace(/[_-]+/g, ' ').replace(/\s*&\s*/g, ' e ').replace(/\s+/g, ' ').trim()
+}
+
 export function modelFromKey(key: string, baseUrl: string): R2Model | null {
   if (!/\.(jpe?g|png|webp|avif|gif|svg)$/i.test(key)) return null
   const parts = key.split('/')
-  const folders = parts.slice(0, -1).map(normalize)
+  const folders = parts.slice(0, -1).map(normalizeFolder)
   // Imagens de IA são variações de um produto existente, não novos modelos.
-  if (folders.includes('ai-cache')) return null
+  if (folders.includes('ai cache')) return null
   const folder = [...folders].reverse().find((part) => Object.hasOwn(FOLDERS, part))
   if (!folder) return null
   const config = FOLDERS[folder]

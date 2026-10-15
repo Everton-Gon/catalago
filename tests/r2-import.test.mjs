@@ -23,6 +23,55 @@ test('ignora arquivos auxiliares, pastas desconhecidas e cache de IA', () => {
   }
 })
 
+test('reconhece copos, garrafas, almofadas, azulejos e kits nos nomes usados no R2', () => {
+  for (const [folder, category, label] of [
+    ['Copo', 'copos', 'Copo'], ['Copos', 'copos', 'Copo'],
+    ['Garrafa', 'copos', 'Garrafa'], ['Garrafas', 'copos', 'Garrafa'],
+    ['Copos e Garrafas', 'copos', 'Copo ou garrafa'], ['Copos & Garrafas', 'copos', 'Copo ou garrafa'],
+    ['copos_e_garrafas', 'copos', 'Copo ou garrafa'], ['COPOS-E-GARRAFAS', 'copos', 'Copo ou garrafa'],
+    ['Garrafas Térmicas', 'copos', 'Garrafa térmica'], ['Squeezes', 'copos', 'Squeeze'],
+    ['Almofada', 'personalizados', 'Almofada'], ['Almofadas', 'personalizados', 'Almofada'],
+    ['Azulejo', 'quadros', 'Azulejo'], ['Azulejos', 'quadros', 'Azulejo'], ['Azuleijos', 'quadros', 'Azulejo'],
+    ['Kit', 'kits', 'Kit'], ['Kits', 'kits', 'Kit'], ['Kits Presente', 'kits', 'Kit'],
+  ]) {
+    const key = `catalago-imagens/${folder}/Novo modelo.jpg`
+    const result = modelFromKey(key, base)
+    assert(result, folder)
+    assert.equal(result.category, category, folder)
+    assert.equal(result.name, `${label} — Novo modelo`, folder)
+    assert.equal(result.key, key)
+    assert.equal(result.url, `${base}/${key.split('/').map(encodeURIComponent).join('/')}`)
+  }
+  assert.equal(modelFromKey('Copos e Garrafas/Garrafas/Térmica.jpg', base).name, 'Garrafa — Térmica')
+  assert.equal(modelFromKey('ai_cache/Garrafas/preview.jpg', base), null)
+  assert.equal(modelFromKey('Outra pasta/arquivo.jpg', base), null)
+})
+
+test('importa as novas famílias como rascunhos, sem duplicar ou alterar produtos existentes', () => {
+  const keys = ['Copos e Garrafas/Copo.jpg', 'Garrafas/Térmica.jpg', 'Almofadas/Nome.jpg', 'Azuleijos/Foto.jpg', 'Kit/Presente.jpg']
+  const models = keys.map(key => modelFromKey(key, base))
+  const existing = { ...importModels([]).products[0], name: 'Nome já revisado', price: 35, status: 'published' }
+  const first = importR2Models([existing], models, '2026-10-15')
+  assert.equal(first.additions.length, 5)
+  assert.equal(first.products[0], existing)
+  assert(first.additions.every(product => product.status === 'draft' && product.price === 0))
+  assert.deepEqual(first.additions.map(product => product.category), ['copos', 'copos', 'personalizados', 'quadros', 'kits'])
+  const again = importR2Models(first.products, models, '2026-10-15')
+  assert.equal(again.additions.length, 0)
+  assert.deepEqual(again.products, first.products)
+})
+
+test('lista os oito nomes exatos de pastas informados pelo lojista', async () => {
+  const folders = ['Almofadas', 'Azulejo', 'Camisa', 'Caneca magica', 'Caneca normal', 'Caneca pintura', 'Copos e garrafas', 'Kit']
+  const page = await listModelPage(async () => ({ Contents: folders.map(folder => ({ Key: `${folder}/Modelo.jpg`, Size: 2048 })) }), 'catalago-imagens', base)
+  assert.equal(page.models.length, 8)
+  assert.deepEqual(page.models.map(model => model.category), ['personalizados', 'quadros', 'camisetas', 'canecas', 'canecas', 'canecas', 'copos', 'kits'])
+  assert.deepEqual(page.models.slice(3, 6).map(model => model.mugType), ['magica', 'porcelana', 'colorir'])
+  const imported = importR2Models([], page.models, '2026-10-15')
+  assert.equal(imported.additions.length, 8)
+  assert(imported.additions.every(product => product.status === 'draft'))
+})
+
 test('listagem mantém a paginação mesmo quando uma página não contém modelos', async () => {
   const page = await listModelPage(async (input) => {
     assert.deepEqual(input, { Bucket: 'test-bucket', MaxKeys: 1000, ContinuationToken: 'opaque-token' })
