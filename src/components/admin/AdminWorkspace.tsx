@@ -21,7 +21,7 @@ import {
   Power,
 } from "lucide-react";
 import type { User } from "@netlify/identity";
-import { useCatalog } from "@/contexts/CatalogContext";
+import { useCatalog, notifyCatalogUpdated } from "@/contexts/CatalogContext";
 import { CATEGORIES } from "@/data/categories";
 import {
   DEFAULT_CONTENT,
@@ -181,6 +181,7 @@ export default function AdminWorkspace({
     try {
       await adminRequest("products", "PUT", next);
       setProducts(next);
+      notifyCatalogUpdated();
       await refresh();
       setNotice({
         tone: "success",

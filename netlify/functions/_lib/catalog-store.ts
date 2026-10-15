@@ -8,7 +8,7 @@ export function getCatalogStore() {
 }
 
 export async function readProducts(): Promise<unknown> {
-  return getCatalogStore().get(PRODUCTS_KEY, { type: 'json' })
+  return getCatalogStore().get(PRODUCTS_KEY, { type: 'json', consistency: 'strong' })
 }
 
 export async function writeProducts(products: unknown): Promise<void> {

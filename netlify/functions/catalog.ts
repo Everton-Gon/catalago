@@ -8,7 +8,11 @@ export default async function handler(request: Request) {
 
   const products = await readProducts()
   return Response.json(products, {
-    headers: { 'Cache-Control': 'public, max-age=30, stale-while-revalidate=300' },
+    headers: {
+      'Cache-Control': 'no-store',
+      'CDN-Cache-Control': 'no-store',
+      'Netlify-CDN-Cache-Control': 'no-store',
+    },
   })
 }
 

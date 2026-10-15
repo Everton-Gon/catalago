@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {build} from 'esbuild'
-const state={user:null,values:{},writes:0}
+const state={user:null,values:{},writes:0,reads:[]}
 globalThis.__adminServerFixture=state
 const identity=`export async function getUser(){return globalThis.__adminServerFixture.user}export function verifyRequestOrigin(request){if(request.headers.get('origin')!=='https://shop.example')throw new Error('Forbidden origin')}`
-const blobs=`export function getStore(){return {get:async key=>structuredClone(globalThis.__adminServerFixture.values[key]??null),setJSON:async(key,value)=>{globalThis.__adminServerFixture.values[key]=structuredClone(value);globalThis.__adminServerFixture.writes++}}}`
-const result=await build({stdin:{contents:`export {default as products} from './netlify/functions/admin-products.ts';export {default as content} from './netlify/functions/admin-content.ts';export {default as orders} from './netlify/functions/admin-orders.ts';export {default as storefront} from './netlify/functions/storefront.ts';export {PRODUCTS} from './src/data/products.ts';export {DEFAULT_CONTENT} from './src/data/storefrontContent.ts';`,resolveDir:process.cwd()},tsconfig:'tsconfig.app.json',bundle:true,write:false,platform:'node',format:'esm',plugins:[{name:'isolated-services',setup(builder){builder.onResolve({filter:/^@netlify\/(identity|blobs)$/},args=>({path:args.path,namespace:'fixture'}));builder.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:args.path.endsWith('identity')?identity:blobs,loader:'js'}))}}]})
+const blobs=`export function getStore(){return {get:async(key,options)=>{globalThis.__adminServerFixture.reads.push({key,options});return structuredClone(globalThis.__adminServerFixture.values[key]??null)},setJSON:async(key,value)=>{globalThis.__adminServerFixture.values[key]=structuredClone(value);globalThis.__adminServerFixture.writes++}}}`
+const result=await build({stdin:{contents:`export {default as products} from './netlify/functions/admin-products.ts';export {default as content} from './netlify/functions/admin-content.ts';export {default as orders} from './netlify/functions/admin-orders.ts';export {default as storefront} from './netlify/functions/storefront.ts';export {default as catalog} from './netlify/functions/catalog.ts';export {PRODUCTS} from './src/data/products.ts';export {DEFAULT_CONTENT} from './src/data/storefrontContent.ts';`,resolveDir:process.cwd()},tsconfig:'tsconfig.app.json',bundle:true,write:false,platform:'node',format:'esm',plugins:[{name:'isolated-services',setup(builder){builder.onResolve({filter:/^@netlify\/(identity|blobs)$/},args=>({path:args.path,namespace:'fixture'}));builder.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:args.path.endsWith('identity')?identity:blobs,loader:'js'}))}}]})
 const api=await import('data:text/javascript;base64,'+Buffer.from(result.outputFiles[0].text).toString('base64'))
 function request(path,method='GET',value,origin='https://shop.example'){return new Request(`https://shop.example/api/admin/${path}`,{method,headers:{origin,'Content-Type':'application/json'},...(value!==undefined?{body:JSON.stringify(value)}:{})})}
 function reset(){state.user={email:'admin@example.test',roles:['admin']};state.values={products:structuredClone(api.PRODUCTS),content:structuredClone(api.DEFAULT_CONTENT),orders:[]};state.writes=0}
@@ -33,4 +33,18 @@ test('orçamentos recebem ID/histórico no servidor e protegem produtos vinculad
 })
 test('coleções vinculadas não podem ser removidas pela API',async()=>{
   reset();state.values.products[0].collections=['gospel'];const value=structuredClone(api.DEFAULT_CONTENT);value.collections=value.collections.filter(c=>c.id!=='gospel');assert.equal((await api.content(request('content','PUT',value))).status,400)
+})
+
+test('catálogo público lê a versão atual sem cache após publicação e desativação',async()=>{
+  reset();state.reads=[]
+  const updated=structuredClone(api.PRODUCTS)
+  updated[0].available=false
+  updated[1].price=40
+  assert.equal((await api.products(request('products','PUT',updated))).status,200)
+  const response=await api.catalog(new Request('https://shop.example/api/catalog'))
+  assert.deepEqual(await response.json(),updated)
+  for(const header of ['cache-control','cdn-cache-control','netlify-cdn-cache-control'])assert.equal(response.headers.get(header),'no-store')
+  const read=state.reads.filter(r=>r.key==='products').at(-1)
+  assert.equal(read.options.consistency,'strong')
+  assert.equal(state.writes,1)
 })
