@@ -53,6 +53,7 @@ export function calculateStartingPrice(product: Product): number {
   const basePrice = absolutePrices.length > 0 ? Math.min(...absolutePrices) : product.price
 
   return product.variants.reduce((total, variant) => {
+    if (variant.options.length === 0) return total
     if (variant.options.some((option) => option.price !== undefined)) return total
     const pricedDeltas = variant.options.map((option) => option.priceDelta ?? 0)
     const cheapest = Math.min(...pricedDeltas)
@@ -66,7 +67,7 @@ export function getDefaultSelections(
   preferLowestPrice = false,
 ): Record<string, string> {
   return Object.fromEntries(
-    product.variants.map((variant) => {
+    product.variants.filter((variant) => variant.options.length > 0).map((variant) => {
       if (!preferLowestPrice) return [variant.id, variant.options[0].label]
       const priced = variant.options
         .filter((option) => option.price !== undefined)

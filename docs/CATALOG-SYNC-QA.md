@@ -24,3 +24,11 @@ A consulta pública acontecia apenas na montagem da aplicação. A API permitia 
 - `tests/admin.e2e.mjs`, contra Vite: gravação confirmada emite aviso; gravação rejeitada não emite; regressão dos fluxos administrativos.
 
 Os testes usam APIs simuladas e não alteram os dados publicados. A correção precisa de deploy para entrar no site. Como a API publicada já contém o cadastro correto, uma atualização completa da página (`Ctrl+F5`) deve carregar esse cadastro mesmo antes do deploy.
+
+## Regressão: variações sem opções
+
+Após novas publicações, a API continha um copo e um kit com a dimensão `tamanho` e `options: []`. `getDefaultSelections` tentava acessar o rótulo da primeira opção inexistente, causando o erro `Cannot read properties of undefined (reading 'label')` durante o cálculo dos limites do catálogo. Além disso, `Math.min` sobre a lista vazia produzia um preço infinito.
+
+A seleção padrão e o menor preço agora ignoram dimensões vazias, e o seletor público não exibe esses grupos sem opções. Os dados salvos não são alterados. Dimensões configuradas continuam determinando seleções, preços e acréscimos normalmente.
+
+Regressões: `tests/empty-variants.test.mjs` cobre grupos obrigatórios/opcionais, preço base, promoção, acréscimos e limites/filtro. `tests/catalog-sync.e2e.mjs` usa uma dimensão vazia e verifica catálogo, página do produto e inclusão na sacola pelo celular. Uma cópia somente de leitura do catálogo público também foi usada no preview local para conferir catálogo completo, categorias Copos e Kits e as páginas dos produtos afetados em 1440 e 390 px.

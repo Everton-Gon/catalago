@@ -26,11 +26,12 @@ export default function ProductOptions({
     else if (colors.some((color) => color.name === selectedColor)) setShowShirtColors(true)
   }, [selectedColor, colors])
 
-  if (variants.length === 0) return null
+  const configuredVariants = variants.filter((variant) => variant.options.length > 0)
+  if (configuredVariants.length === 0) return null
 
   return (
     <div className="space-y-5">
-      {variants.map((variant) => {
+      {configuredVariants.map((variant) => {
         const isColor = variant.options.some((option) => option.swatch)
         const chosen = selected[variant.id]
 
