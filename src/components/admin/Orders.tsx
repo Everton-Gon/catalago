@@ -201,7 +201,7 @@ function OrderEditor({
   const [draft, setDraft] = useState(() => structuredClone(order)),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
-    [productId, setProductId] = useState(products[0]?.id || ""),
+    [productId, setProductId] = useState(""),
     [fileUrl, setFileUrl] = useState(""),
     [paymentConfirm, setPaymentConfirm] = useState(false);
   const dirty = JSON.stringify(draft) !== JSON.stringify(order);
@@ -323,45 +323,7 @@ function OrderEditor({
           />
         </Field>
         <fieldset>
-          <legend>Itens e opções</legend>
-          <div className="admin-actions">
-            <select
-              aria-label="Produto para orçamento"
-              value={productId}
-              onChange={(e) => setProductId(e.target.value)}
-            >
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-            <button
-              className="admin-button secondary small"
-              onClick={() => {
-                const p = products.find((p) => p.id === productId);
-                if (p) {
-                  const options = getDefaultSelections(p, true);
-                  setDraft({
-                    ...draft,
-                    items: [
-                      ...draft.items,
-                      {
-                        productId: p.id,
-                        name: p.name,
-                        quantity: 1,
-                        unitPrice: calculateUnitPrice(p, options),
-                        options,
-                        notes: "",
-                      },
-                    ],
-                  });
-                }
-              }}
-            >
-              Adicionar item
-            </button>
-          </div>
+          <legend>Itens do orçamento</legend>
           {draft.items.map((item, index) => {
             const p = products.find((p) => p.id === item.productId);
             const patch = (value: Partial<typeof item>) =>
@@ -474,6 +436,57 @@ function OrderEditor({
               </fieldset>
             );
           })}
+          <details open={!order.items.length} className="mt-4">
+            <summary className="admin-button secondary small">
+              {draft.items.length
+                ? "Adicionar outro produto"
+                : "Adicionar produto ao orçamento"}
+            </summary>
+            <p>Selecione um produto e confirme em Adicionar item.</p>
+            <div className="admin-actions">
+              <select
+                aria-label="Produto para orçamento"
+                value={productId}
+                onChange={(e) => setProductId(e.target.value)}
+              >
+                <option value="" disabled>
+                  Selecione um produto para adicionar
+                </option>
+                {products.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                className="admin-button secondary small"
+                disabled={!productId}
+                onClick={() => {
+                  const p = products.find((p) => p.id === productId);
+                  if (p) {
+                    const options = getDefaultSelections(p, true);
+                    setDraft({
+                      ...draft,
+                      items: [
+                        ...draft.items,
+                        {
+                          productId: p.id,
+                          name: p.name,
+                          quantity: 1,
+                          unitPrice: calculateUnitPrice(p, options),
+                          options,
+                          notes: "",
+                        },
+                      ],
+                    });
+                    setProductId("");
+                  }
+                }}
+              >
+                Adicionar item
+              </button>
+            </div>
+          </details>
         </fieldset>
         <Field label="Observações gerais">
           <textarea
