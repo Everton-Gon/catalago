@@ -1,6 +1,7 @@
 export type OrderStatus =
   "pending" | "approved" | "production" | "completed" | "cancelled";
 export interface AdminOrder {
+  source?: 'storefront';
   id: string;
   number: string;
   customer: string;
@@ -11,8 +12,10 @@ export interface AdminOrder {
     name: string;
     quantity: number;
     unitPrice: number;
+    priceOnRequest?: boolean;
     options: Record<string, string>;
     notes: string;
+    attachments?: string[];
   }[];
   notes: string;
   attachments: string[];

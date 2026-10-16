@@ -12,7 +12,7 @@ export default function Privacy() {
   return (
     <LegalPage
       title="Política de privacidade"
-      updatedAt="15 de setembro de 2026"
+      updatedAt="16 de outubro de 2026"
       intro={`Esta página explica, de forma direta, quais dados a ${SITE.name} coleta quando você usa este site e o que fazemos com eles. Se algo não estiver claro, fale com a gente.`}
       sections={[
         {
@@ -37,7 +37,7 @@ export default function Privacy() {
               </p>
               <p>
                 Esses dados não são enviados para lugar nenhum enquanto você não clicar em
-                “Solicitar orçamento pelo WhatsApp”. Você pode apagá-los a qualquer momento
+                “Registrar orçamento”. Você pode apagá-los a qualquer momento
                 esvaziando a sacola ou limpando os dados do site no navegador.
               </p>
             </>
@@ -47,11 +47,12 @@ export default function Privacy() {
           heading: '3. Arquivos de arte',
           body: (
             <p>
-              Quando você seleciona um arquivo de arte na página do produto, ele{' '}
-              <strong>não é enviado para nenhum servidor</strong>. O arquivo fica apenas na
-              memória da aba aberta, para gerar a prévia, e desaparece quando você fecha ou
-              recarrega a página. O envio real da arte acontece quando você anexa o arquivo na
-              conversa do WhatsApp.
+              A foto ou arte escolhida fica guardada no armazenamento local do navegador (IndexedDB),
+              vinculada ao item da sacola. Ao registrar o orçamento, enviamos o arquivo para
+              armazenamento privado na Cloudflare R2 e guardamos a referência no orçamento administrativo.
+              A imagem não entra no catálogo público. O link protegido incluído na mensagem permite
+              consultar o arquivo; qualquer pessoa que receber esse link poderá abri-lo.
+              Para apagar os arquivos locais, limpe os dados deste site no navegador.
             </p>
           ),
         },
@@ -59,11 +60,12 @@ export default function Privacy() {
           heading: '4. O que acontece ao enviar o pedido',
           body: (
             <p>
-              Ao clicar no botão de orçamento, abrimos o WhatsApp com uma mensagem já escrita
-              contendo os itens da sua sacola. A partir daí a conversa passa a ser regida pelos
-              termos e pela política de privacidade do próprio WhatsApp. Os dados que você nos
-              enviar por lá (nome, endereço de entrega, arte) são usados exclusivamente para
-              produzir e entregar o seu pedido.
+              Ao registrar o orçamento, salvamos seu nome, WhatsApp, produtos, opções, textos,
+              observações e referências dos arquivos para atender sua solicitação. Só confirmamos
+              o registro após a gravação. Depois você pode abrir o WhatsApp com o número do orçamento,
+              os detalhes e links das imagens, e tocar em Enviar. O arquivo não é anexado como foto
+              automaticamente. A conversa passa a seguir também os termos e a política do WhatsApp.
+              O registro não confirma venda, pagamento, prazo ou entrega.
             </p>
           ),
         },

@@ -54,7 +54,7 @@ export default function Home() {
       <section className="container-page store-section">
         <div className="personalization-banner">
           <div className="personalization-image">{mug && <img src={mug.images[0]} alt="Uma das canecas disponíveis para personalização" width={560} height={480} loading="lazy" decoding="async" />}</div>
-          <div className="personalization-copy"><p className="eyebrow"><Sparkles size={15} aria-hidden="true" /> Um toque só seu</p><h2>Uma ideia sua.<br /><em>Um presente com significado.</em></h2><p>Um nome, uma frase, uma lembrança especial. Escolha o produto e conte como você imagina a personalização. A gente combina os detalhes pelo WhatsApp.</p><Link to="/produtos" className="store-button">Quero personalizar <ArrowRight size={17} aria-hidden="true" /></Link><small>Já tem uma arte? Envie o arquivo diretamente na conversa do WhatsApp.</small></div>
+          <div className="personalization-copy"><p className="eyebrow"><Sparkles size={15} aria-hidden="true" /> Um toque só seu</p><h2>Uma ideia sua.<br /><em>Um presente com significado.</em></h2><p>Um nome, uma frase, uma lembrança especial. Escolha o produto e conte como você imagina a personalização. A gente combina os detalhes pelo WhatsApp.</p><Link to="/produtos" className="store-button">Quero personalizar <ArrowRight size={17} aria-hidden="true" /></Link><small>Já tem uma arte? Anexe no produto e confira a prévia antes de solicitar seu orçamento.</small></div>
         </div>
       </section>
       <section className="container-page store-section how-section">

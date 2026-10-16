@@ -116,6 +116,7 @@ export interface Product {
 
 /** Dados de personalização preenchidos pelo cliente. */
 export interface Personalization {
+  image?: { id: string; name: string; type: string; size: number }
   name?: string
   text?: string
 }

@@ -64,16 +64,25 @@ try {
   await page.reload()
   await expectNames(['Almofada atualizada QA'])
   await page.goto(base + '/produto/qa-bluey')
-  await page.getByRole('heading', { name: 'Almofada atualizada QA', exact: true }).waitFor()
+  await page.getByRole('heading', { name: 'Almofada atualizada QA', exact: true, level: 1 }).waitFor()
   assert.equal(await page.locator('fieldset').filter({ hasText: 'Tamanho' }).count(), 0)
   await page.getByRole('button', { name: 'Adicionar à sacola', exact: true }).click()
   await page.getByRole('dialog', { name: 'Minha sacola', exact: true }).waitFor()
   assert.match(await page.getByRole('dialog', { name: 'Minha sacola', exact: true }).innerText(), /40,00/)
+  const storedCart = await page.evaluate(() => localStorage.getItem('feproposito:cart:v1'))
+  fail = true
+  await page.reload()
+  await page.getByRole('alert').waitFor()
+  assert.equal(await page.evaluate(() => localStorage.getItem('feproposito:cart:v1')), storedCart)
+  fail = false
+  await page.getByRole('button', { name: 'Tentar novamente' }).click()
+  await page.getByRole('heading', { name: 'Almofada atualizada QA', exact: true, level: 1 }).waitFor()
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('feproposito:cart:v1')).length), 1)
   assert.deepEqual(errors, [])
   assert(requests >= 7)
   console.log('PASS: catálogo atualizado também no celular; nenhum erro de execução')
   console.log('PASS: variante vazia não trava catálogo, página do produto ou sacola; preço preservado')
-} catch (error) { console.log({requests,errors,cards:await page.locator('.product-card h3').allTextContents(),body:(await page.locator('body').innerText()).slice(0,2500)}); throw error } finally {
+} catch (error) { console.log({requests,errors,cards:await page.locator('.product-card h3').allTextContents(),url:page.url()}); throw error } finally {
   releaseOld?.()
   await browser.close()
 }

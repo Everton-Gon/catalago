@@ -7,7 +7,7 @@ import ProductOptions from '@/components/ProductOptions'
 import PersonalizationForm from '@/components/PersonalizationForm'
 import ProductGrid from '@/components/ProductGrid'
 import QuantitySelector from '@/components/QuantitySelector'
-import WhatsAppIcon from '@/components/icons/WhatsAppIcon'
+import WhatsAppCheckout from '@/components/WhatsAppCheckout'
 import { getProductBySlug, getRelatedProducts } from '@/data/catalog'
 import { useCatalog } from '@/contexts/CatalogContext'
 import { getCategory } from '@/data/categories'
@@ -21,7 +21,6 @@ import {
   isPriceOnRequest,
 } from '@/utils/cart'
 import { formatPrice } from '@/utils/format'
-import { buildProductQuoteMessage, buildWhatsAppUrl } from '@/utils/whatsapp'
 import { useSeo } from '@/utils/seo'
 import type { Personalization } from '@/types'
 
@@ -41,6 +40,7 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1)
   const [personalization, setPersonalization] = useState<Personalization>({})
   const [notes, setNotes] = useState('')
+  const [imageBusy, setImageBusy] = useState(false)
 
   // Reinicia o formulário sempre que o produto muda (navegação entre relacionados).
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function ProductPage() {
     setPersonalization(editingItem?.personalization ?? {})
     setNotes(editingItem?.notes ?? '')
     track('view_product', { id: product.id, name: product.name })
-  }, [product, editingId])
+  }, [product?.id, editingId, editingItem?.id])
 
   const unitPrice = useMemo(
     () => (product ? calculateUnitPrice(product, selectedVariants) : 0),
@@ -211,6 +211,7 @@ export default function ProductPage() {
               onChange={setPersonalization}
               notes={notes}
               onNotesChange={setNotes}
+              onImageBusy={setImageBusy}
             />
           </div>
 
@@ -231,35 +232,16 @@ export default function ProductPage() {
             <button
               type="button"
               onClick={handleAddToCart}
-              disabled={priceOnRequest}
+              disabled={priceOnRequest || imageBusy}
               className="flex w-full items-center justify-center gap-2.5 rounded-full bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50 px-6 py-4 text-sm font-bold uppercase tracking-wide text-white shadow-lg shadow-brand-700/20 transition-all hover:bg-brand-800 active:scale-[0.99]"
             >
               <ShoppingBag className="size-[18px]" aria-hidden="true" />
               {editingItem ? 'Salvar alterações na sacola' : 'Adicionar à sacola'}
             </button>
 
-            <a
-              href={buildWhatsAppUrl(
-                buildProductQuoteMessage(
-                  product,
-                  selectedVariants,
-                  priceOnRequest ? undefined : unitPrice,
-                  quantity,
-                  personalization,
-                  notes,
-                ),
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => track('begin_whatsapp_quote', { source: 'product_page', id: product.id })}
-              className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-[#17633c] px-6 py-4 text-center text-sm font-semibold text-[#17633c] transition-colors hover:bg-[#17633c]/5"
-            >
-              <WhatsAppIcon className="size-[18px]" />
+            <WhatsAppCheckout disabled={imageBusy} source="product_page" items={[{ id: product.id, product, selectedVariants, quantity, personalization, notes, unitPrice }]}>
               Solicitar orçamento pelo WhatsApp
-            </a>
-            <p className="text-center text-xs leading-relaxed text-ink-500">
-              Se você já possui uma arte, anexe a imagem diretamente na conversa do WhatsApp.
-            </p>
+            </WhatsAppCheckout>
           </div>
 
           <ul className="mt-6 space-y-2.5 text-sm text-ink-600">

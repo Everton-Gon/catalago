@@ -4,12 +4,13 @@ import { requireAdmin } from "./_lib/auth";
 import { getCatalogStore } from "./_lib/catalog-store";
 import { ORDER_LABELS, type AdminOrder } from "../../src/types/admin";
 import { safeAsset } from "../../src/utils/admin-validation";
+import { readAllOrders, readCustomerQuote, quoteKey } from './_lib/customer-quotes';
 export default async function handler(request: Request) {
   const denied = await requireAdmin(request);
   if (denied) return denied;
   const store = getCatalogStore();
   if (request.method === "GET")
-    return Response.json((await store.get("orders", { type: "json" })) || [], {
+    return Response.json(await readAllOrders(), {
       headers: { "Cache-Control": "no-store" },
     });
   if (request.method !== "POST" && request.method !== "PUT")
@@ -45,7 +46,8 @@ export default async function handler(request: Request) {
       throw new Error("Orçamento inválido.");
     const orders = ((await store.get("orders", { type: "json" })) ||
       []) as AdminOrder[];
-    const previous = orders.find((o) => o.id === order.id);
+    const customerQuote = request.method === 'PUT' && order.id.startsWith('web-') ? await readCustomerQuote(order.id) : null;
+    const previous = customerQuote?.order ?? orders.find((o) => o.id === order.id);
     if (request.method === "PUT" && !previous)
       return Response.json(
         { error: "Orçamento não encontrado." },
@@ -58,6 +60,7 @@ export default async function handler(request: Request) {
       : "Orçamento registrado manualmente pelo administrador.";
     const saved: AdminOrder = {
       ...order,
+      source: customerQuote ? 'storefront' : previous?.source,
       id: previous?.id || crypto.randomUUID(),
       number: previous?.number || `FP-${Date.now()}`,
       createdAt: previous?.createdAt || now,
@@ -66,7 +69,8 @@ export default async function handler(request: Request) {
         { at: now, actor: user?.email || "Administrador", message },
       ],
     };
-    await store.setJSON(
+    if (customerQuote) await store.setJSON(quoteKey(saved.id), { ...customerQuote, order: saved });
+    else await store.setJSON(
       "orders",
       previous
         ? orders.map((o) => (o.id === saved.id ? saved : o))

@@ -71,7 +71,7 @@ function hydrate(stored: StoredCartItem[], products: Product[]): CartItem[] {
     const personalization = entry.personalization ?? {}
     const notes = entry.notes ?? ''
     const selectedVariants = Object.fromEntries(
-      product.variants.map((variant) => {
+      product.variants.filter((variant) => variant.options.length > 0).map((variant) => {
         const storedLabel = entry.selectedVariants[variant.id] ?? ''
         const normalized = storedLabel
           .toLocaleLowerCase('pt-BR')
@@ -150,17 +150,21 @@ function writeStorage(items: CartItem[]): void {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { products } = useCatalog()
+  const { products, loading, error } = useCatalog()
+  const [hydrated, setHydrated] = useState(false)
   const [items, setItems] = useState<CartItem[]>(() => readStorage(products))
   const [isDrawerOpen, setDrawerOpen] = useState(false)
 
   useEffect(() => {
-    writeStorage(items)
-  }, [items])
+    if (hydrated && !loading && !error) writeStorage(items)
+  }, [items, hydrated, loading, error])
 
   useEffect(() => {
-    setItems(readStorage(products))
-  }, [products])
+    if (!loading && !error) {
+      setItems(readStorage(products))
+      setHydrated(true)
+    }
+  }, [products, loading, error])
 
   // Mantém a sacola sincronizada entre abas abertas do mesmo navegador.
   useEffect(() => {

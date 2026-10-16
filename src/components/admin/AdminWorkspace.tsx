@@ -1326,6 +1326,10 @@ export default function AdminWorkspace({
               )}
               {module === "orders" && (
                 <Orders
+                  onRefresh={async () => {
+                    try { setOrders(await adminRequest<AdminOrder[]>('orders')); setReady(r => ({ ...r, orders: true })); }
+                    catch { setNotice({ tone: 'error', text: 'Não foi possível atualizar os orçamentos. Tente novamente.' }); }
+                  }}
                   orders={orders}
                   products={products}
                   ready={ready.orders}

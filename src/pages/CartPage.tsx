@@ -128,8 +128,8 @@ export default function CartPage() {
 
                 <p className="mt-3 flex items-start gap-1.5 text-xs leading-relaxed text-ink-500">
                   <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-                  Sem cadastro e sem pagamento online. Ao clicar, o WhatsApp abre com o pedido
-                  já escrito — é só enviar.
+                  Sem pagamento online. Informe seu nome e contato para registrar o orçamento;
+                  depois abra o WhatsApp e envie a mensagem pronta.
                 </p>
 
               </div>

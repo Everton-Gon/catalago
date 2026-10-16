@@ -1,5 +1,6 @@
-import { useId } from 'react'
+import { useId, useRef } from 'react'
 import type { Personalization, PersonalizationConfig } from '@/types'
+import ArtworkUpload from './ArtworkUpload'
 
 interface PersonalizationFormProps {
   config: PersonalizationConfig
@@ -7,6 +8,7 @@ interface PersonalizationFormProps {
   onChange: (value: Personalization) => void
   notes: string
   onNotesChange: (notes: string) => void
+  onImageBusy?: (busy: boolean) => void
 }
 
 export default function PersonalizationForm({
@@ -15,8 +17,11 @@ export default function PersonalizationForm({
   onChange,
   notes,
   onNotesChange,
+  onImageBusy,
 }: PersonalizationFormProps) {
   const fieldId = useId()
+  const latestValue = useRef(value)
+  latestValue.current = value
 
   if (!config.enabled) return null
 
@@ -29,9 +34,10 @@ export default function PersonalizationForm({
       <p className="mt-1 text-sm text-ink-600">
         Conte como você quer o seu produto. Tudo isso vai junto no orçamento.
       </p>
-      <p className="mt-2 text-xs leading-relaxed text-ink-600">Quer usar uma foto ou uma arte? Envie o arquivo diretamente na conversa do WhatsApp após abrir seu pedido. Esta página não envia arquivos ao atendimento.</p>
+      <p className="mt-2 text-xs leading-relaxed text-ink-600">Sua arte ficará vinculada a este produto. Ao solicitar o orçamento, salvaremos a imagem e incluiremos um link protegido na mensagem.</p>
 
       <div className="mt-4 space-y-4">
+        <ArtworkUpload image={value.image} onBusy={onImageBusy} onChange={image => onChange({ ...latestValue.current, image })} />
         {config.nameField && (
           <div>
             <label htmlFor={`${fieldId}-name`} className="mb-1.5 block text-sm font-medium text-ink-800">

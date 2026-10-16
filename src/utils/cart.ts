@@ -97,6 +97,7 @@ export function buildCartItemId(
     personalization.name ?? '',
     personalization.text ?? '',
     notes,
+    ...(personalization.image ? [`image=${personalization.image.id}`] : []),
   ].join('|')
 
   return `${product.id}::${variantKey}::${personalizationKey}`

@@ -21,7 +21,7 @@ const FAQ = [
   {
     question: 'Como envio a minha arte?',
     answer:
-      'Você pode selecionar o arquivo na página do produto para deixá-lo anotado no pedido. Como o site ainda não recebe arquivos, o envio de fato acontece na conversa do WhatsApp — é só anexar a imagem ou o PDF.',
+      'Use “Enviar foto ou arte” no produto para anexar uma imagem JPG, PNG ou WebP de até 3 MB. Confira a prévia na sacola. Ao registrar o orçamento, salvamos a arte e incluímos um link protegido na mensagem do WhatsApp. O limite total de imagens por orçamento é 4 MB.',
   },
   {
     question: 'Não tenho arte pronta. Vocês criam?',

@@ -11,11 +11,13 @@ export default function Orders({
   products,
   ready,
   onSaved,
+  onRefresh,
 }: {
   orders: AdminOrder[];
   products: Product[];
   ready: boolean;
   onSaved: (order: AdminOrder) => void;
+  onRefresh: () => Promise<void>;
 }) {
   const [editing, setEditing] = useState<AdminOrder | null>(null),
     [query, setQuery] = useState(""),
@@ -49,10 +51,16 @@ export default function Orders({
         <div>
           <h2>Pedidos e orçamentos</h2>
           <p>
-            Registros manuais de atendimentos reais. Abrir o WhatsApp não
-            confirma venda ou pagamento.
+            Orçamentos solicitados pelo site e registros de atendimento. Abrir o
+            WhatsApp não confirma venda ou pagamento.
           </p>
         </div>
+        <button
+          className="admin-button secondary"
+          onClick={() => void onRefresh()}
+        >
+          Atualizar orçamentos
+        </button>
         <button className="admin-button" disabled={!ready} onClick={create}>
           Registrar orçamento
         </button>
@@ -110,19 +118,26 @@ export default function Orders({
                 .reverse()
                 .map((order) => (
                   <tr key={order.id}>
-                    <td>{order.number}</td>
+                    <td>
+                      {order.number}
+                      {order.source === "storefront" && (
+                        <small>Solicitado pelo site</small>
+                      )}
+                    </td>
                     <td>{order.customer}</td>
                     <td>
                       {new Date(order.createdAt).toLocaleDateString("pt-BR")}
                     </td>
                     <td>{order.items.reduce((n, i) => n + i.quantity, 0)}</td>
                     <td>
-                      {formatPrice(
-                        order.items.reduce(
-                          (n, i) => n + i.quantity * i.unitPrice,
-                          0,
-                        ),
-                      )}
+                      {order.items.some((item) => item.priceOnRequest)
+                        ? "Sob consulta"
+                        : formatPrice(
+                            order.items.reduce(
+                              (n, i) => n + i.quantity * i.unitPrice,
+                              0,
+                            ),
+                          )}
                       <small>
                         {order.totalKind === "estimated"
                           ? "Estimado"
@@ -133,7 +148,10 @@ export default function Orders({
                       <span
                         className={`admin-badge ${order.status === "completed" ? "success" : "attention"}`}
                       >
-                        {ORDER_LABELS[order.status]}
+                        {order.source === "storefront" &&
+                        order.status === "pending"
+                          ? "Orçamento solicitado"
+                          : ORDER_LABELS[order.status]}
                       </span>
                     </td>
                     <td>
@@ -205,18 +223,37 @@ function OrderEditor({
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty]);
   function summary() {
-    return `${draft.number}\n${draft.customer}\n${draft.items
-      .map(
-        (i) =>
-          `${i.quantity} × ${i.name}: ${formatPrice(i.unitPrice)}\n${Object.entries(
-            i.options,
-          )
-            .map(([k, v]) => `${k}: ${v}`)
-            .join(", ")}\n${i.notes}`,
-      )
-      .join(
-        "\n",
-      )}\n${draft.notes}\nTotal ${draft.totalKind === "estimated" ? "estimado" : "confirmado"}: ${formatPrice(draft.items.reduce((n, i) => n + i.quantity * i.unitPrice, 0))}`;
+    const total = draft.items.some((item) => item.priceOnRequest)
+      ? "Sob consulta"
+      : formatPrice(
+          draft.items.reduce(
+            (sum, item) => sum + item.quantity * item.unitPrice,
+            0,
+          ),
+        );
+    return [
+      draft.number,
+      draft.customer,
+      ...draft.items.flatMap((item) => [
+        String(item.quantity) +
+          " × " +
+          item.name +
+          ": " +
+          (item.priceOnRequest ? "Sob consulta" : formatPrice(item.unitPrice)),
+        Object.entries(item.options)
+          .map(([key, value]) => key + ": " + value)
+          .join(", "),
+        item.notes,
+        ...(item.attachments?.filter((url) =>
+          draft.attachments.includes(url),
+        ) ?? []),
+      ]),
+      draft.notes,
+      "Total " +
+        (draft.totalKind === "estimated" ? "estimado" : "confirmado") +
+        ": " +
+        total,
+    ].join("\n");
   }
   async function save() {
     if (busy) return;
@@ -331,7 +368,15 @@ function OrderEditor({
               setDraft((d) => ({
                 ...d,
                 items: d.items.map((i, n) =>
-                  n === index ? { ...i, ...value } : i,
+                  n === index
+                    ? {
+                        ...i,
+                        ...value,
+                        ...(value.unitPrice !== undefined
+                          ? { priceOnRequest: false }
+                          : {}),
+                      }
+                    : i,
                 ),
               }));
             return (
@@ -391,6 +436,24 @@ function OrderEditor({
                     </select>
                   </Field>
                 ))}
+                {item.attachments
+                  ?.filter((url) => draft.attachments.includes(url))
+                  .map((url) => (
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      key={url}
+                      className="admin-button secondary"
+                    >
+                      <img
+                        src={url}
+                        alt={`Arte de referência de ${item.name}`}
+                        style={{ width: 72, height: 72, objectFit: "contain" }}
+                      />
+                      Abrir imagem deste item
+                    </a>
+                  ))}
                 <Field label="Personalização e observações">
                   <textarea
                     value={item.notes}
@@ -478,8 +541,9 @@ function OrderEditor({
         <fieldset>
           <legend>Arquivos do cliente</legend>
           <p>
-            Registre os links reais dos arquivos recebidos. A sacola pública não
-            envia arquivos ao servidor.
+            Imagens enviadas pelo site são salvas em armazenamento privado e
+            vinculadas ao item. Você também pode registrar links recebidos no
+            atendimento.
           </p>
           {draft.attachments.map((url, index) => (
             <div className="admin-actions" key={url}>
@@ -546,7 +610,14 @@ function OrderEditor({
           )}
         </fieldset>
         {error && (
-          <p className={error === "Resumo copiado." ? "admin-success" : "admin-field-error"} role="status">
+          <p
+            className={
+              error === "Resumo copiado."
+                ? "admin-success"
+                : "admin-field-error"
+            }
+            role="status"
+          >
             {error}
           </p>
         )}

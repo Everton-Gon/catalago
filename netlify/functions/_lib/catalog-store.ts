@@ -4,7 +4,7 @@ const STORE_NAME = 'fe-proposito-catalog'
 const PRODUCTS_KEY = 'products'
 
 export function getCatalogStore() {
-  return getStore(STORE_NAME)
+  return getStore({ name: STORE_NAME, consistency: 'strong' })
 }
 
 export async function readProducts(): Promise<unknown> {

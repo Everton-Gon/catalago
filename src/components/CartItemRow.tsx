@@ -5,6 +5,7 @@ import { useCart } from '@/contexts/CartContext'
 import { describeSelection } from '@/utils/cart'
 import { formatPrice } from '@/utils/format'
 import type { CartItem } from '@/types'
+import ArtworkPreview from './ArtworkPreview'
 
 interface CartItemRowProps {
   item: CartItem
@@ -79,6 +80,7 @@ export default function CartItemRow({ item, variant = 'full', onNavigate }: Cart
           </p>
         )}
 
+        {item.personalization.image && <ArtworkPreview image={item.personalization.image} />}
         {item.notes && (
           <p className="mt-1 break-words text-xs italic text-ink-500">Obs.: {item.notes}</p>
         )}

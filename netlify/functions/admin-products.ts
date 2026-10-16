@@ -1,8 +1,9 @@
 import type { Config } from '@netlify/functions'
 import { requireAdmin } from './_lib/auth'
-import { getCatalogStore, readProducts, writeProducts } from './_lib/catalog-store'
+import { readProducts, writeProducts } from './_lib/catalog-store'
 import { productErrors } from '../../src/utils/admin-validation'
 import type { Product } from '../../src/types'
+import { readAllOrders } from './_lib/customer-quotes'
 
 function isProductList(value: unknown): value is Array<Record<string, unknown>> {
   return (
@@ -49,7 +50,7 @@ export default async function handler(request: Request) {
       if(Object.keys(errors).length)return Response.json({error:`${product.name}: ${Object.values(errors).join(' ')}`},{status:400})
     }
 
-    const orders=await getCatalogStore().get('orders',{type:'json'}) as {items:{productId:string}[]}[] | null
+    const orders=await readAllOrders()
     if(orders?.some(order=>order.items.some(item=>!list.some(product=>product.id===item.productId))))return Response.json({error:'Produtos vinculados a pedidos devem ser desativados, sem exclusão.'},{status:400})
     await writeProducts(products)
     return Response.json({ ok: true, count: products.length })
