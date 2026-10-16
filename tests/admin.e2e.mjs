@@ -6,9 +6,10 @@ const context=await browser.newContext({viewport:{width:1440,height:1050},reduce
 let storedProducts=null,storedContent=null,storedOrders=[],rejectNext=false,rejectUpload=false,uploadCount=0
 const errors=[],writes=[]
 // Fixtures stay in this isolated browser. No real authentication or server data is changed.
-await context.route(/\/node_modules\/\.vite\/deps\/@netlify_identity\.js/,route=>route.fulfill({contentType:'application/javascript',body:`const user={id:'qa-admin',email:'qa@example.test',roles:['admin']};export async function getUser(){return user}export async function handleAuthCallback(){return null}export function onAuthChange(){return()=>{}}export async function login(){return user}export async function logout(){}export async function acceptInvite(){return user}export async function updateUser(){return user}`}))
+await context.route(/\/node_modules\/\.vite\/deps\/@netlify_identity\.js/,route=>route.fulfill({contentType:'application/javascript',body:`const user={id:'qa-admin',email:'qa@example.test',roles:['admin']};export async function refreshSession(){return null}export async function getUser(){return user}export async function handleAuthCallback(){return null}export function onAuthChange(){return()=>{}}export async function login(){return user}export async function logout(){}export async function acceptInvite(){return user}export async function updateUser(){return user}`}))
 await context.route('**/api/**',async route=>{
   const req=route.request(),path=new URL(req.url()).pathname,method=req.method()
+  if(path.startsWith('/api/admin/'))assert.equal(req.headers().authorization,'Bearer qa-admin-session')
   if(path==='/api/catalog')return route.fulfill({json:storedProducts})
   if(path==='/api/storefront')return route.fulfill({json:storedContent?{...storedContent,banners:storedContent.banners.filter(b=>b.active),collections:storedContent.collections.filter(c=>c.active)}:null})
   if(path==='/api/admin/images'){if(rejectUpload){rejectUpload=false;return route.fulfill({status:500,json:{error:'Falha de upload simulada'}})}uploadCount++;return route.fulfill({json:{url:['/brand/canecas-alca-coracao.webp','/brand/caneca-rosa-borda-dourada.webp','/brand/caneca-com-colher.webp'][((uploadCount-1)%3)]}})}
@@ -22,6 +23,7 @@ await context.route('**/api/**',async route=>{
 })
 const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept())
 const base=process.env.STOREFRONT_URL||'http://127.0.0.1:5173'
+await context.addCookies([{name:'nf_jwt',value:'qa-admin-session',url:base}])
 const nav=name=>page.locator('.admin-sidebar').getByRole('button',{name,exact:true})
 const dialog=()=>page.getByRole('dialog')
 try {

@@ -1,6 +1,5 @@
 import type { Config } from "@netlify/functions";
-import { getUser } from "@netlify/identity";
-import { requireAdmin } from "./_lib/auth";
+import { requireAdmin, getAdminSessionUser } from "./_lib/auth";
 import { getCatalogStore } from "./_lib/catalog-store";
 import { ORDER_LABELS, type AdminOrder } from "../../src/types/admin";
 import { safeAsset } from "../../src/utils/admin-validation";
@@ -53,7 +52,7 @@ export default async function handler(request: Request) {
         { error: "Orçamento não encontrado." },
         { status: 404 },
       );
-    const user = await getUser();
+    const user = await getAdminSessionUser(request);
     const now = new Date().toISOString();
     const message = previous
       ? `Atualizado: andamento ${ORDER_LABELS[order.status]}; pagamento ${order.payment === "confirmed" ? "confirmado" : "não confirmado"}; valor ${order.totalKind === "confirmed" ? "confirmado" : "estimado"}.`

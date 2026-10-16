@@ -45,3 +45,12 @@ As capturas do admin são de um contexto de teste, com conta `qa@example.test`; 
 - O histórico anterior de conversas do WhatsApp não está no projeto. Os atendimentos precisam ser registrados manualmente; sincronização automática exigiria integração própria e consentimento para persistir os dados dos clientes.
 - Não há gateway de pagamentos ou conciliação automática. Confirmação é manual, registrada pelo administrador.
 - Arquivos de clientes não são enviados pela sacola pública: podem ser vinculados pelos links reais recebidos no atendimento.
+
+
+## Sessão administrativa e respostas 401
+
+As chamadas de consulta, gravação, upload e descoberta R2 passam pelo transporte administrativo autenticado. Ele usa a renovação oficial do Identity, compartilha a renovação entre requisições simultâneas e envia o token da sessão no cabeçalho Authorization somente aos endpoints locais /api/admin/. Um 401 só é repetido uma vez, quando a renovação realmente mudou o token. Uma sessão inválida gera uma mensagem específica; não há logout automático nem descarte automático do editor.
+
+No servidor, getUser continua sendo a verificação principal. Se o contexto do runtime não disponibilizar o usuário, o token recebido é validado na API /user do Identity do próprio site. Apenas roles devolvidas pela verificação confiável concedem acesso; decodificar um JWT localmente não concede acesso. A função admin e a verificação de origem para gravações continuam obrigatórias. A identidade validada é reutilizada somente dentro da mesma requisição, inclusive no histórico dos orçamentos.
+
+Validação: tests/admin-session.test.mjs cobre renovação concorrente, envio restrito do token, repetição limitada, rejeição de token inválido, usuário sem admin e origem externa. tests/admin.e2e.mjs também exige o cabeçalho autenticado nas chamadas administrativas simuladas. Os testes não usam a conta real do administrador. A confirmação no site publicado exige um novo deploy e uma sessão válida, entrando novamente se necessário.

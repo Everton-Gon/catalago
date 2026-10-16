@@ -1,3 +1,4 @@
+import { adminFetch } from '@/utils/admin-session';
 import { useEffect, useRef, useState } from "react";
 import {
   LayoutDashboard,
@@ -148,7 +149,7 @@ export default function AdminWorkspace({
       if (failed.length)
         setNotice({
           tone: "error",
-          text: "Alguns dados não puderam ser carregados. Os módulos afetados ficam somente para consulta; nenhuma alteração será gravada até restabelecer a conexão.",
+          text: failed.find(result => result.status === 'rejected' && result.reason instanceof Error && result.reason.message.includes('sessão administrativa'))?.reason?.message || "Alguns dados não puderam ser carregados. Os módulos afetados ficam somente para consulta; nenhuma alteração será gravada até restabelecer a conexão.",
         });
       setLoading(false);
     }
@@ -299,7 +300,7 @@ export default function AdminWorkspace({
     const controller = new AbortController();
     discoveryController.current = controller;
     try {
-      const models = await fetchR2Models(controller.signal);
+      const models = await fetchR2Models(controller.signal, adminFetch);
       if (controller.signal.aborted) return;
       const result = importR2Models(
         currentProducts.current,
@@ -1328,7 +1329,7 @@ export default function AdminWorkspace({
                 <Orders
                   onRefresh={async () => {
                     try { setOrders(await adminRequest<AdminOrder[]>('orders')); setReady(r => ({ ...r, orders: true })); }
-                    catch { setNotice({ tone: 'error', text: 'Não foi possível atualizar os orçamentos. Tente novamente.' }); }
+                    catch (error) { setNotice({ tone: 'error', text: error instanceof Error ? error.message : 'Não foi possível atualizar os orçamentos. Tente novamente.' }); }
                   }}
                   orders={orders}
                   products={products}

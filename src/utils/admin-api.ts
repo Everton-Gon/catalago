@@ -1,9 +1,10 @@
+import { adminFetch, ADMIN_SESSION_MESSAGE } from './admin-session'
 export async function adminRequest<T>(
   path: string,
   method = "GET",
   body?: unknown,
 ): Promise<T> {
-  const response = await fetch(`/api/admin/${path}`, {
+  const response = await adminFetch(`/api/admin/${path}`, {
     method,
     headers: {
       Accept: "application/json",
@@ -11,6 +12,7 @@ export async function adminRequest<T>(
     },
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   });
+  if (response.status === 401) throw new Error(ADMIN_SESSION_MESSAGE)
   let result: unknown;
   try {
     result = await response.json();
@@ -39,10 +41,11 @@ export async function uploadAdminImage(
   const data = new FormData();
   data.set("file", file);
   data.set("category", category);
-  const response = await fetch("/api/admin/images", {
+  const response = await adminFetch("/api/admin/images", {
     method: "POST",
     body: data,
   });
+  if (response.status === 401) throw new Error(ADMIN_SESSION_MESSAGE)
   let result: { url?: string; error?: string };
   try {
     result = await response.json();

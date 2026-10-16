@@ -12,7 +12,7 @@ try {
   for (const width of [1440, 390]) {
     const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce' })
     const errors=[], attempts=[]; let reject=true, release, orders=[]
-    await context.route(/\/node_modules\/\.vite\/deps\/@netlify_identity\.js/,r=>r.fulfill({contentType:'application/javascript',body:`const user={id:'qa-admin',email:'qa@example.test',roles:['admin']};export async function getUser(){return user}export async function handleAuthCallback(){return null}export function onAuthChange(){return()=>{}}export async function login(){return user}export async function logout(){}export async function acceptInvite(){return user}export async function updateUser(){return user}`}))
+    await context.route(/\/node_modules\/\.vite\/deps\/@netlify_identity\.js/,r=>r.fulfill({contentType:'application/javascript',body:`const user={id:'qa-admin',email:'qa@example.test',roles:['admin']};export async function refreshSession(){return null}export async function getUser(){return user}export async function handleAuthCallback(){return null}export function onAuthChange(){return()=>{}}export async function login(){return user}export async function logout(){}export async function acceptInvite(){return user}export async function updateUser(){return user}`}))
     await context.route('**/api/**',async route=>{
       const req=route.request(),path=new URL(req.url()).pathname
       if(path==='/api/catalog'||path==='/api/admin/products')return route.fulfill({json:[product]})
