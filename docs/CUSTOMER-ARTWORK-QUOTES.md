@@ -33,3 +33,9 @@ O código recusa usar o mesmo bucket configurado em `R2_BUCKET_NAME`. A privacid
 - TypeScript e build de produção.
 
 Testes de R2, Identity e Blobs são isolados com serviços simulados. Não foram enviados arquivos de clientes nem alterados os dados publicados. A configuração real do bucket privado e a validação final em produção ficam pendentes até o deploy com as variáveis corretas.
+
+## Correção de inicialização da Function e telefone
+
+A consulta somente de leitura por `OPTIONS /api/customer-quote` no site publicado retornou 502 com `Cannot find package '@/config'`. A importação compartilhada de configuração no gerador de links do WhatsApp usava o atalho do Vite; foi substituída por caminho relativo compatível com a Function. `tests/quote-runtime.test.mjs` agora empacota as funções sem os atalhos do Vite, carrega as dependências reais e verifica a inicialização sem credenciais ou gravações.
+
+O atributo HTML `pattern` do telefone foi ajustado para escapar parênteses e hífen no modo Unicode `v` usado pelos navegadores. O teste de navegador valida `+55 (85) 99999-9999`, rejeita texto inválido e monitora erros de expressão regular no console, além de percorrer o fluxo completo de orçamento com imagem.

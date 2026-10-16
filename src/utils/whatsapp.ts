@@ -1,4 +1,4 @@
-import { WHATSAPP_DEFAULT_MESSAGE, WHATSAPP_NUMBER } from '@/config/site'
+import { WHATSAPP_DEFAULT_MESSAGE, WHATSAPP_NUMBER } from '../config/site'
 import { formatPrice } from './format'
 import type { CartItem, Personalization, Product } from '@/types'
 

@@ -166,7 +166,7 @@ export default function WhatsAppCheckout({
               inputMode="tel"
               autoComplete="tel"
               maxLength={20}
-              pattern="[+() 0-9-]{10,20}"
+              pattern={'[+\\(\\) 0-9\\-]{10,20}'}
               disabled={busy || Boolean(currentReceipt)}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
